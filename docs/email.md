@@ -14,4 +14,4 @@ Set EMAIL_SENDING_ENABLED=true only after owner-only test delivery, unsubscribe 
 
 ## Missing integrations
 
-Luma and Exa require new keys supplied by the owner. Site event browsing remains available from the curated public snapshot. The admin displays missing integrations and blocks unavailable actions; no fake success or provider-less send receipts.
+Luma and Exa require new keys supplied by the owner. Site event browsing reads the verified copy in the independent Firestore database. The explicit snapshot mode is only a bootstrap option. The admin displays missing integrations and blocks unavailable actions; no fake success or provider-less send receipts.
