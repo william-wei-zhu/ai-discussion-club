@@ -1,0 +1,1 @@
+Read docs/plan.md and ../web-app-building-standard/SKILL.md. This is an independent app: never reuse SuperIntro runtime credentials or default cloud project IDs. Never expose attendee PII on public pages. Read installed Next.js docs before implementation.
