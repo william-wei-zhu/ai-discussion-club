@@ -104,6 +104,7 @@ export function EventsClient() {
 // --- Events ----------------------------------------------------------------
 
 interface EventRow {
+  coverUrl?: string;
   id: string;
   name: string;
   startAt: number;
