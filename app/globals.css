@@ -17,3 +17,6 @@
 /* Keep inline prose and headings visually uniform, including future emphasis markup. */
 :is(h1,h2,h3,h4,h5,h6,p) :is(em,i,strong,b,span){font-family:inherit;font-style:inherit;font-weight:inherit;font-size:inherit;color:inherit}
 :is(h1,h2,h3,h4,h5,h6,p) a:not(.button){font-family:inherit;font-style:inherit;font-weight:inherit;font-size:inherit;color:inherit}
+
+.event-artwork{display:block;flex:0 0 180px;width:180px}.event-thumbnail{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.event-cover{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--line)}
+@media(max-width:700px){.event-row{grid-template-columns:96px 1fr}.event-artwork{width:96px}.event-artwork .event-date{width:96px}}

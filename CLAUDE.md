@@ -22,3 +22,5 @@ Scaling: the inherited admin/matcher loads club contacts in memory at current ~1
 2026-09-22: Promoted the supplied wooden-wall group portrait (community-02.png) to the first featured community photo, replacing the selfie. Its full-width natural aspect ratio keeps the full group visible on desktop and mobile; the previous photo remains in the gallery.
 
 2026-09-22: Replaced the earlier italic/accent phrase styling at the owner's request. Every heading and sentence now has uniform font, color, size, weight and style, including admin summaries. Removed italic font loading and added inherited inline typography. The shared building standard now explicitly prohibits this pattern, replacing its old italic-tagline rule.
+
+2026-09-22: Show the synced Luma coverUrl in every public event list (home, upcoming and archive), plus an optimized full cover on event detail pages. All 23 migrated events currently contain cover URLs. Source is Luma cover_url via the independent Firestore mirror; no new Luma/Exa/Resend key has yet been provisioned or reused from SuperIntro.

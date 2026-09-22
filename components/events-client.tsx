@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -345,6 +347,7 @@ function EventCard({
   }
   return (
     <div className={`orbit-card p-4 ${selected ? "ring-2 ring-primary" : ""}`}>
+      {e.coverUrl && <Image src={e.coverUrl} alt="" width={144} height={144} sizes="144px" className="mb-4 h-36 w-36 rounded-lg border border-border object-contain" />}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold">{e.name || e.id}</p>
