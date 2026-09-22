@@ -30,3 +30,5 @@ Scaling: the inherited admin/matcher loads club contacts in memory at current ~1
 2026-09-22: Domain transfer completed to Vercel with auto-renew enabled and expiration 2028-02-06 UTC. Official HTTPS website returned 200; public DNS resolves to Vercel nameservers while some provider caches still show Cloudflare. Added Resend's exact DKIM TXT and send/rsend CNAME records plus DMARC in Vercel. Resend verification is propagating. NEXT_PUBLIC_SITE_URL now uses https://aidiscussionclub.com; the temporary hostname remains allowed for authentication and origins.
 
 2026-09-22: Use event/events consistently in website copy, accessibility labels, empty states and private-directory fallbacks. Updated the separate admin password to the owner-requested value in private configuration; Google owner verification remains required.
+
+2026-09-22: Keep the header wordmark on one line; removed its forced line break and prevent wrapping. The compact mobile header retains its logo-only treatment.
