@@ -312,6 +312,6 @@ export function fmtTime(ms: unknown) {
 // Compact date (no time) for dense tables.
 export function fmtDate(ms: unknown) {
   const n = Number(ms);
-  if (!n) return "—";
+  if (!n) return "Not available";
   return new Date(n).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "2-digit" });
 }

@@ -48,9 +48,9 @@ export async function PATCH(req: Request) {
     if (!memberships.some((event) => event.id === directory.eventId)) return json({ error: "Unknown event." }, 404);
     directoryWrite = { eventId: directory.eventId, patch };
   }
-  const writes: Promise<unknown>[] = [];
-  if (emailOptOut !== undefined) writes.push(db().collection("clubContacts").doc(auth.contactId).set({ emailOptOut, ...(emailOptOut ? { optOutAt: Date.now() } : { resubscribedAt: Date.now(), resubscribedBy: "email-verified preference link" }) }, { merge: true }));
-  if (directoryWrite) writes.push(db().collection("clubEvents").doc(directoryWrite.eventId).collection("directoryConsent").doc(auth.contactId).set(directoryWrite.patch));
-  await Promise.all(writes);
+  const batch = db().batch();
+  if (emailOptOut !== undefined) batch.set(db().collection("clubContacts").doc(auth.contactId), { emailOptOut, ...(emailOptOut ? { optOutAt: Date.now() } : { resubscribedAt: Date.now(), resubscribedBy: "email-verified preference link" }) }, { merge: true });
+  if (directoryWrite) batch.set(db().collection("clubEvents").doc(directoryWrite.eventId).collection("directoryConsent").doc(auth.contactId), directoryWrite.patch);
+  await batch.commit();
   return json({ ok: true });
 }

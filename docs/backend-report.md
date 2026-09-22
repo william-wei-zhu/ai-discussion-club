@@ -6,7 +6,7 @@ Implemented the independent AI Discussion Club event operations surface from the
 
 - `/admin` provides the Google plus password gated event console.
 - Admin event reads, roster/contact edits, Luma sync, enrichment, match preparation, test send, cancel/arm, recommendation preview, participant XLSX export, and directory-link controls are wired through `/api/events/**`.
-- `/api/club-unsubscribe` preserves the signed, category-separated historical opt-out behavior.
+- `/api/club-unsubscribe` implements signed opt-outs for new club emails. Old SuperIntro email links continue to use the old endpoint; forwarding is a separate cutover requirement.
 - `/api/cron/club-events` and `/api/cron/club-enrich` fail closed on cron authentication and return safe no-op results when jobs or providers are disabled.
 - `/api/cron/club-sync` refreshes the event and contact mirror hourly without depending on the matching horizon.
 - The private event API is covered by `proxy.ts`, which applies `private, no-store` response headers, and the admin fetcher also uses `cache: no-store`.

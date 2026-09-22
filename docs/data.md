@@ -7,3 +7,5 @@ The default-deny rules were deployed separately before initial app launch. Verce
 Verification: inspect the active `cloud.firestore` ruleset in Firebase, confirm the deny-all rule, and attempt a browser SDK read without server privileges. Private data lives in `clubContacts` and `clubEvents` with their subcollections; public event responses use a field projection and require explicit public visibility. Directories add explicit per-event consent and revocable hashed bearer tokens.
 
 Counts on the initial staged copy: 1,345 contacts, 23 events, 17,795 documents, 55 avatar objects. All events are disarmed. Reports are private and excluded from Git. See migration.md for final reconciliation and email cutover.
+
+Preferences require the collection-group ascending index on `guests.email`. It is declared in firestore.indexes.json and was provisioned separately in the dedicated project on 2026-09-22. Deploy indexes with `firebase deploy --only firestore:indexes --project ai-discussion-club-260922` when this configuration changes. Index creation may take several minutes; validate the actual collection-group query after it reports ready.

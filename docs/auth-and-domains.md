@@ -15,3 +15,5 @@ The domain registrar transfer was submitted and Cloudflare release approved on 2
 ## Rules and service identity
 
 Firestore client access is deny-all; server endpoints enforce authorization and field projection. Rules are deployed separately from Vercel. Runtime service account has datastore.user and aiplatform.user only in the new project, plus storage.objectUser on its dedicated uploads bucket. The private local credential and Vercel secret must never be committed.
+
+Initial Google OAuth verification succeeded locally with the owner account and reached the independent password gate. Apex and www are attached to the Vercel project; www redirects to apex. Temporary production hostname is public, and preview deployments retain Vercel authentication.

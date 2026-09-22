@@ -127,7 +127,7 @@ interface EventRow {
 // The event's local start, in the event's own timezone (a DC event reads as 3:00 PM
 // EDT even when the browser is elsewhere).
 function eventWhen(e: Pick<EventRow, "startAt" | "timezone">): string {
-  if (!e.startAt) return "—";
+  if (!e.startAt) return "Not available";
   try {
     return new Intl.DateTimeFormat(undefined, {
       weekday: "short",
@@ -672,7 +672,7 @@ function GuestTable({ authFetch, eventId }: { authFetch: Fetcher; eventId: strin
                     ) : g.linkedinCandidate ? (
                       <span className="text-xs text-muted-foreground">guess pending</span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">Not available</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right">{g.eventApprovedCount}</td>
@@ -972,7 +972,7 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
                       profile
                     </a>
                   ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground">Not available</span>
                   )}
                 </td>
                 <td className="px-3 py-2 text-right text-muted-foreground">{fmtDate(c.firstSeenAt)}</td>

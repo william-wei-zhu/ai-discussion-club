@@ -14,3 +14,7 @@ Scaling: the inherited admin/matcher loads club contacts in memory at current ~1
 
 2026-09-22: Verified the staged database independently (1,345 contacts, 23 events, 424 send receipts, one opt-out; all imported events disarmed). Public source changed from snapshot to Firestore after confirming 22 public events and two upcoming; runtime read failures no longer republish an old snapshot.
 2026-09-22: ExcelJS uuid override ^11.1.1 resolves the remaining moderate advisory; conditional-format XLSX write/read roundtrip passed.
+
+2026-09-22: Explicit Next.js framework added to vercel.json and the project, because an API-created generic project built successfully but served only static public files. Production hostname is public; branch previews retain Vercel authentication.
+2026-09-22: Refreshed optional native dependency entries with npm 12 in an isolated lockfile workspace after GitHub's clean install found missing emnapi entries. npm 12 clean-install dry run now passes. Added guests.email collection-group index for preference membership queries, discovered by testing against the new database.
+2026-09-22: Directory proxy validates the capability before Next.js begins streaming, ensuring revoked links return real HTTP 404. Synthetic active/revoked HTTP checks passed and fixtures were removed. Preference writes are atomic; delivery errors do not reveal membership.
