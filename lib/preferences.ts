@@ -98,6 +98,6 @@ export async function memberEvents(contactId: string, email: string) {
     const guest = guests.get(event.id);
     const host = Array.isArray(data.hosts) && data.hosts.some((h: Record<string, unknown>) => h.id === contactId || h.email === email);
     if (!(guest?.approvalStatus === "approved" || guest?.isHost === true || host)) return [];
-    return [{ id: event.id, name: String(data.name || "Gathering"), startAt: Number(data.startAt || 0) }];
+    return [{ id: event.id, name: String(data.name || "Event"), startAt: Number(data.startAt || 0) }];
   });
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { projectPublicEvent, safePublicUrl } from '../lib/public-event-projection';
-const source = { visibility: 'public', name: 'A real gathering', startAt: 1790539200000, url: 'https://luma.com/real', attendeeEmails: ['private@example.com'], directoryToken: 'secret' };
+const source = { visibility: 'public', name: 'A real event', startAt: 1790539200000, url: 'https://luma.com/real', attendeeEmails: ['private@example.com'], directoryToken: 'secret' };
 test('public event projection excludes private fields', () => {
   const projected = projectPublicEvent('id', source);
   assert.equal(projected?.name, source.name);

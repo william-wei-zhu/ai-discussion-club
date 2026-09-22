@@ -108,5 +108,5 @@ export async function directoryForToken(token: string): Promise<{
     return card ? [card] : [];
   }).sort((a, b) => Number(b.isHost) - Number(a.isHost) || a.name.localeCompare(b.name));
   const event = eventSnap.data() ?? {};
-  return { event: { name: String(event.name || "AI Discussion Club gathering"), ...(typeof event.startAt === "number" ? { startAt: event.startAt } : {}) }, members };
+  return { event: { name: String(event.name || "AI Discussion Club event"), ...(typeof event.startAt === "number" ? { startAt: event.startAt } : {}) }, members };
 }
