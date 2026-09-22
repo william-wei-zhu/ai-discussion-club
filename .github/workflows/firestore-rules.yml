@@ -1,0 +1,30 @@
+name: Firestore rules
+on:
+  push:
+    branches: [main]
+    paths: [firestore.rules, firebase.json, .github/workflows/firestore-rules.yml]
+  workflow_dispatch:
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_RULES_CREDENTIALS_B64: ${{ secrets.FIREBASE_RULES_CREDENTIALS_B64 }}
+    steps:
+      - name: Skip when rule deploy identity is not configured
+        if: env.FIREBASE_RULES_CREDENTIALS_B64 == ''
+        run: echo 'Rules deploy skipped. Dedicated CI credential is not configured.'
+      - uses: actions/checkout@v4
+        if: env.FIREBASE_RULES_CREDENTIALS_B64 != ''
+      - uses: actions/setup-node@v4
+        if: env.FIREBASE_RULES_CREDENTIALS_B64 != ''
+        with:
+          node-version: '24'
+      - name: Deploy default-deny rules
+        if: env.FIREBASE_RULES_CREDENTIALS_B64 != ''
+        shell: bash
+        run: |
+          credential_file="$RUNNER_TEMP/aidc-rules.json"
+          printf '%s' "$FIREBASE_RULES_CREDENTIALS_B64" | base64 --decode > "$credential_file"
+          chmod 600 "$credential_file"
+          trap 'rm -f "$credential_file"' EXIT
+          GOOGLE_APPLICATION_CREDENTIALS="$credential_file" npx --yes firebase-tools@15 deploy --only firestore:rules --project ai-discussion-club-260922 --non-interactive

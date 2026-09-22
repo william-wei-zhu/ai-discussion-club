@@ -1,0 +1,222 @@
+[
+  {
+    "id": "evt-5LlsypnWnIKWUMH",
+    "name": "Podcast Discussion: Risks of AI becoming smarter than humans - web inventor Sir Tim Berners-Lee",
+    "startAt": 1762633800000,
+    "endAt": 1762639200000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/swxtc71h",
+    "coverUrl": "https://images.lumacdn.com/event-covers/ag/67c092de-1672-49f0-aaab-307e6e99ad3e.jpg",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-6lX6CeYjHLsBWfU",
+    "name": "Podcast Discussion: Dario Amodei “We are near the end of the exponential”",
+    "startAt": 1772913600000,
+    "endAt": 1772920800000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/4ygdg5av",
+    "coverUrl": "https://images.lumacdn.com/event-covers/v3/e05c05aa-092b-48e9-ab85-aac84fe995e4.webp",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-8ZVWv1BK3YqWlck",
+    "name": "Discussion: The Optimist: Sam Altman, Y Combinator, and OpenAI",
+    "startAt": 1768680000000,
+    "endAt": 1768687200000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/5qe4clr1",
+    "coverUrl": "https://images.lumacdn.com/event-covers/4v/7b4c0f86-3a41-472d-9945-8f3369b3e125.jpg",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-BrurCegtuBzQjQD",
+    "name": "Picnic Discussion: The rise of AI teammates | Tara Seshan",
+    "startAt": 1790539200000,
+    "endAt": 1790546400000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-wz0t",
+    "coverUrl": "https://images.lumacdn.com/uploads/5k/77e4ef45-55ed-4247-aede-f65022ff8801.png",
+    "location": "Georgetown Waterfront Park, 3303 Water St NW, Washington, DC 20007, USA"
+  },
+  {
+    "id": "evt-CrtbJOuuB5sykzG",
+    "name": "Builder Nights: Show your AI Projects, Learn from the Best Minds in AI",
+    "startAt": 1784237400000,
+    "endAt": 1784245500000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-f7oi",
+    "coverUrl": "https://images.lumacdn.com/gallery-images/wi/ba62c5e1-cdd3-4d50-b61e-113b428586b3",
+    "location": "AWS Skills Center Arlington, 1550-G Crystal Dr, Arlington, VA 22202, USA"
+  },
+  {
+    "id": "evt-DO4daF3HSy7514c",
+    "name": "Outdoor Discussion Walk: Jensen Huang and Nvidia",
+    "startAt": 1777748400000,
+    "endAt": 1777755600000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/pasu4c88",
+    "coverUrl": "https://images.lumacdn.com/event-covers/71/18cb99c1-f042-4720-9c24-f74df9b98f40.webp",
+    "location": "Woodley Park-Zoo/Adams Morgan, District of Freedom#8573311~!#, 2700 Connecticut Ave NW, Washington, DC 20008, USA"
+  },
+  {
+    "id": "evt-DrvukcKCHtFb9dz",
+    "name": "Museum Discussion: Product Management in the Age of AI | Nikhyl Singhal",
+    "startAt": 1788013800000,
+    "endAt": 1788021000000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-8crf",
+    "coverUrl": "https://images.lumacdn.com/uploads/79/5cf56340-da6f-41bc-9a68-7860589f697e.png",
+    "location": "Smithsonian National Postal Museum, 2 Massachusetts Ave NE, Washington, DC 20002, USA"
+  },
+  {
+    "id": "evt-JpvRMAwV3ZKmE78",
+    "name": "Museum Discussion: What happens after coding is solved? | Fiona Fung",
+    "startAt": 1785076200000,
+    "endAt": 1785083400000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-ao1s",
+    "coverUrl": "https://images.lumacdn.com/uploads/ip/13c44edb-ab02-46ca-9236-f37bd2b36fa0.png",
+    "location": "National Museum of Asian Art, 1050 Independence Ave SW, Washington, DC 20004, USA"
+  },
+  {
+    "id": "evt-KocJFSr0TOHhUV2",
+    "name": "Outdoor Discussion Walk: AI for Math & Science | Terence Tao",
+    "startAt": 1791642600000,
+    "endAt": 1791649800000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-4zr0",
+    "coverUrl": "https://images.lumacdn.com/uploads/06/3b3e8676-2fe7-410d-bf49-6e6b27d5ddd8.png",
+    "location": "Foggy Bottom-GWU Station, Washington, DC, USA"
+  },
+  {
+    "id": "evt-LmzJs3XBmh06Xrf",
+    "name": "Author Book Talk: Who is in Charge? Why AI Must Remain Under Human Control",
+    "startAt": 1789828200000,
+    "endAt": 1789833600000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-qzlc",
+    "coverUrl": "https://images.lumacdn.com/uploads/je/7656957a-f0a0-448e-8615-732df29a2a09.png",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-Q5hfTIluMtoBkqW",
+    "name": "Outdoor Discussion Walk: OpenClaw and Autonomous Agents",
+    "startAt": 1779649200000,
+    "endAt": 1779656400000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/uk22t7r2",
+    "coverUrl": "https://images.lumacdn.com/uploads/aj/af41bfaf-d5cb-4b97-8b52-2e7cf06fa9fc.png",
+    "location": "The People's Garden D.C., 12th St SW, Washington, DC 20560, USA"
+  },
+  {
+    "id": "evt-W7IbYhi13fRerE0",
+    "name": "Podcast Discussion: The Experimentation Machine: How AI is Creating 10x Founders | Jeffrey Bussgang",
+    "startAt": 1765051200000,
+    "endAt": 1765058400000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/i5iy9ld9",
+    "coverUrl": "https://images.lumacdn.com/event-covers/gi/9bfd4f24-b436-4ebc-8968-d7d92ec275a0.jpg",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-WjkQWcNgptAxLzV",
+    "name": "Outdoor Discussion Walk: The Secrets of Claude Code",
+    "startAt": 1774724400000,
+    "endAt": 1774731600000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/z0w3n0vk",
+    "coverUrl": "https://images.lumacdn.com/event-covers/e9/a536a87e-13c9-40bb-9abf-8ecbd73de4bb.webp",
+    "location": "Tazza Cafe, 600 Jamal Khashoggi Way, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-aJE2sXImuJ0fkFp",
+    "name": "Build your first website in 2 Hours with Claude & Vercel (Beginner friendly)",
+    "startAt": 1789680600000,
+    "endAt": 1789689600000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-rzd0",
+    "coverUrl": "https://images.lumacdn.com/uploads/rv/853cf4a5-93d9-46d5-8a9e-4a08748c0561.png",
+    "location": "AWS Skills Center Arlington, 1550-G Crystal Dr, Arlington, VA 22202, USA"
+  },
+  {
+    "id": "evt-bNYDunvvPA758mX",
+    "name": "Outdoor Discussion Walk: AI and the Future of Work / Jobs",
+    "startAt": 1776522600000,
+    "endAt": 1776529800000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/49xrugfx",
+    "coverUrl": "https://images.lumacdn.com/event-covers/d7/cf7019c7-bdb1-4230-9751-009e978722e6.png",
+    "location": "US Navy Memorial Plaza, 701 Pennsylvania Ave NW, Washington, DC 20004, USA"
+  },
+  {
+    "id": "evt-cDBx4KkCXOme6rY",
+    "name": "AI in Marketing: AR Filters are the New Billboard",
+    "startAt": 1780167600000,
+    "endAt": 1780174800000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-igkn",
+    "coverUrl": "https://images.lumacdn.com/uploads/w0/8cca3f80-9e50-4df3-8c8e-97a7ebe888eb.png",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-daqu7UMV0vMIyAV",
+    "name": "Mall Discussion Walk: How Anthropic, Costco, and Patagonia all build incorruptible companies",
+    "startAt": 1782068400000,
+    "endAt": 1782075600000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-cm1j",
+    "coverUrl": "https://images.lumacdn.com/uploads/ps/65edcf19-ef1d-4869-a351-50f1a75777a2.png",
+    "location": "Shake Shack Tysons Corner, 7924 Tysons Corner Center, McLean, VA 22102, USA"
+  },
+  {
+    "id": "evt-hpb7qiuncuicCrQ",
+    "name": "Outdoor Discussion Walk: WALL-E and Future of AI",
+    "startAt": 1780756200000,
+    "endAt": 1780763400000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/78bfskyi",
+    "coverUrl": "https://images.lumacdn.com/uploads/m7/bdc2669c-5967-4b44-9e2d-102260824f1d.webp",
+    "location": "Open Road Rosslyn, 1201 Wilson Blvd Suite 213, Arlington, VA 22209, USA"
+  },
+  {
+    "id": "evt-ogouBe2ZA1KXYQ2",
+    "name": "Podcast Discussion: Spatial Intelligence is the Next Frontier in AI | Dr. Fei-Fei Li",
+    "startAt": 1771704000000,
+    "endAt": 1771711200000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/cbmp3v4k",
+    "coverUrl": "https://images.lumacdn.com/event-covers/px/229f51e4-4114-47b2-8ec5-18d8294e0632.jpg",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-oycmDyi0JruHmSF",
+    "name": "Build with Claude 101: From Idea to Working Prototype (No coding experience needed)",
+    "startAt": 1786215600000,
+    "endAt": 1786224600000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-iolu",
+    "coverUrl": "https://images.lumacdn.com/uploads/0d/5778b8c2-6901-4b9f-9d39-0b9ce772774c.png",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  },
+  {
+    "id": "evt-pi5szPh072nm6FF",
+    "name": "Museum Discussion Walk: Perfect Search for an Agentic Internet | Exa",
+    "startAt": 1783780200000,
+    "endAt": 1783787400000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/ai-i4c9",
+    "coverUrl": "https://images.lumacdn.com/uploads/vk/7a931356-8ee0-44fb-b80b-ece8003641c1.png",
+    "location": "Smithsonian's National Air and Space Museum, 650 Jefferson Dr SW, Washington, DC 20004, USA"
+  },
+  {
+    "id": "evt-xXCgkuUZycHwUDj",
+    "name": "Podcast Discussion: Google: The AI Company",
+    "startAt": 1773514800000,
+    "endAt": 1773522000000,
+    "timezone": "America/New_York",
+    "url": "https://luma.com/s2fj2dsb",
+    "coverUrl": "https://images.lumacdn.com/event-covers/42/f0bda208-6801-48e3-92ae-0773448a7f3f.jpg",
+    "location": "West End Neighborhood Library, 2301 L St NW, Washington, DC 20037, USA"
+  }
+]

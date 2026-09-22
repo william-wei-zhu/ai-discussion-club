@@ -1,0 +1,12 @@
+import Image from 'next/image';
+import Link from 'next/link';
+import { EventList } from '@/components/event-list';
+import { getPublicEvents, getRequestTime } from '@/lib/public-events';
+import { communityPhotos } from '@/lib/site';
+export const dynamic = 'force-dynamic';
+export default async function Home() {
+  const events = await getPublicEvents();
+  const now = await getRequestTime();
+  const upcoming = events.filter(event => Date.parse(event.endAt || event.startAt) >= now).reverse().slice(0, 3);
+  return <><section className="hero wrap"><h1>Make DC the City<br />for <em>Innovators.</em></h1><p>A place for curious minds to talk AI,<br className="desktop-break" /> share what they’re building, and find their people.</p><Link className="button" href="/events">Join a conversation</Link></section><div className="skyline" role="img" aria-label="Washington, DC skyline framed by purple cherry blossoms"/><section className="section wrap"><div className="section-heading"><div><h2>See you at the next one.</h2><p>Good conversations start by showing up.</p></div><Link className="text-link" href="/events">Explore all events</Link></div><EventList events={upcoming}/></section><section className="community-section"><div className="wrap"><div className="section-heading"><h2>Big ideas.<br /><em>Better company.</em></h2><p>From a first question to a new collaboration,<br className="desktop-break" /> it starts with a conversation.</p></div><div className="photo-montage"><Image src={communityPhotos[0]} alt="AI Discussion Club members gathered after a discussion" width={1200} height={900} sizes="(max-width: 700px) 92vw, 58vw"/><Image src={communityPhotos[1]} alt="Club members together at a bookstore" width={900} height={600} sizes="(max-width: 700px) 92vw, 35vw"/><Image src={communityPhotos[2]} alt="Club members in front of the Lincoln Memorial" width={900} height={900} sizes="(max-width: 700px) 92vw, 35vw"/></div><div className="community-caption"><p>Different backgrounds. A shared curiosity.</p><Link href="/about" className="text-link">Meet the club</Link></div></div></section><section className="invitation wrap"><Image src="/brand/logo.png" alt="" width={110} height={110}/><h2>There’s a place for<br /><em>your perspective.</em></h2><p>Come with a question. Leave with a connection.</p><Link className="button" href="/events">Find your next gathering</Link></section></>;
+}
