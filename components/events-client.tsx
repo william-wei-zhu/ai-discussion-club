@@ -384,7 +384,7 @@ function EventCard({
       </div>
 
       <p className="mt-2 text-sm">
-        <span className="font-semibold">{e.counts?.approved ?? 0}</span> confirmed ·{" "}
+        {e.counts?.approved ?? 0} confirmed ·{" "}
         {e.counts?.invited ?? 0} invited · {e.counts?.declined ?? 0} declined
         {e.counts?.checkedIn ? ` · ${e.counts.checkedIn} checked in` : ""}
       </p>
@@ -598,8 +598,8 @@ function GuestTable({ authFetch, eventId }: { authFetch: Fetcher; eventId: strin
           told us anything. The fix for a thin number is upstream, in the Luma
           registration questions, not in the matcher. */}
       <p className="text-sm">
-        <span className="font-semibold">{c.approved}</span> confirmed · {c.withAnswers} answered a question ·{" "}
-        {c.withLinkedIn} have a LinkedIn · <span className="font-semibold">{c.zeroSignal}</span> tell us nothing ·{" "}
+        {c.approved} confirmed · {c.withAnswers} answered a question ·{" "}
+        {c.withLinkedIn} have a LinkedIn · {c.zeroSignal} tell us nothing ·{" "}
         {c.recipients} would be emailed
         {c.optedOut ? ` · ${c.optedOut} opted out` : ""}
         {c.candidates ? ` · ${c.candidates} LinkedIn guesses to review` : ""}

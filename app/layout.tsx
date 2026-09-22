@@ -4,7 +4,7 @@ import { Providers } from '@/components/providers';
 import { SiteFooter, SiteHeader } from '@/components/site-shell';
 import { siteName, siteUrl, tagline, isCanonical } from '@/lib/site';
 import './globals.css';
-const display = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600'], style: ['normal', 'italic'], variable: '--font-display' });
+const display = Cormorant_Garamond({ subsets: ['latin'], weight: ['400', '500', '600'], style: 'normal', variable: '--font-display' });
 const body = DM_Sans({ subsets: ['latin'], variable: '--font-body' });
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl), title: { default: tagline, template: `%s | ${siteName}` },
