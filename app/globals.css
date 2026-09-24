@@ -86,8 +86,8 @@
 .site-footer{margin-top:40px;padding-block:72px 30px;border-top:1px solid var(--line);background:var(--surface)}
 .footer-top{display:flex;justify-content:space-between;align-items:flex-end;gap:32px}
 .footer-tagline{max-width:13ch;font-family:var(--font-display),Georgia,serif;font-size:clamp(2.3rem,4.6vw,4rem);font-weight:500;line-height:1.02;letter-spacing:-.035em}
-.footer-bottom{display:flex;align-items:center;gap:28px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line);font-size:.82rem}
-.footer-title{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-display),Georgia,serif;font-size:1.3rem;color:var(--foreground);text-decoration:none}.footer-title img{width:44px;height:44px;border-radius:50%}
+.footer-bottom{display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line);font-size:.82rem}
+.footer-title{display:inline-flex;align-items:center;gap:10px;white-space:nowrap;font-family:var(--font-display),Georgia,serif;font-size:1.3rem;color:var(--foreground);text-decoration:none}.footer-title img{width:44px;height:44px;border-radius:50%}
 .footer-bottom nav{display:flex;flex-wrap:wrap;gap:24px;margin-left:auto}
 
 @media(max-width:900px){.spotlight{grid-template-columns:minmax(0,280px) 1fr;gap:30px}.photo-montage{grid-template-rows:auto 230px}}
@@ -102,3 +102,4 @@
 .info-panel{position:static}.event-photos{grid-template-columns:1fr}
 .site-footer{padding-block:48px 26px}.footer-top,.footer-bottom{flex-direction:column;align-items:flex-start;gap:18px}.footer-bottom{margin-top:36px}.footer-bottom nav{margin-left:0}
 }
+.footer-bottom>a{white-space:nowrap}
