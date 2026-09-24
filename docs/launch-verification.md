@@ -11,4 +11,4 @@ Verified on 2026-09-22 against https://ai-discussion-club-psi.vercel.app, applic
 
 ## Remaining activation work
 
-Provide fresh Luma, Exa, Resend and PostHog keys. Verify the owned sender domain and an owner-only email test. Finish historical unsubscribe forwarding, reconcile changes since the staged copy, and pause the old club sender before enabling this one. Automatic jobs and attendee sending remain disabled; no real attendee emails were sent during verification. The new guests.email collection-group index was provisioned and its build must finish before preference membership queries can operate.
+Provide fresh Luma, Exa, Resend and PostHog keys. Verify the owned sender domain and an owner-only email test. Finish historical unsubscribe forwarding, reconcile changes since the staged copy, and pause the old club sender before enabling this one. Automatic jobs and attendee sending remained disabled during verification; both were enabled on 2026-09-24 after the owner-only test passed (see CLAUDE.md). The new guests.email collection-group index was provisioned and its build must finish before preference membership queries can operate.
