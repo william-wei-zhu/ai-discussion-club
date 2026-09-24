@@ -82,7 +82,7 @@
 .info-list li{display:flex;gap:12px;align-items:flex-start;font-size:.95rem;line-height:1.5}.info-list svg{flex-shrink:0;margin-top:2px;color:var(--accent)}
 .button-stack{display:grid;gap:10px}.button-stack .button{width:100%}
 
-.site-footer{margin-top:40px;padding-block:72px 30px;border-top:1px solid var(--line);background:var(--surface)}
+.site-footer{margin-top:0;padding-block:72px 30px;border-top:1px solid var(--line);background:var(--surface)}
 .footer-top{display:flex;justify-content:space-between;align-items:flex-end;gap:32px}
 .footer-tagline{max-width:13ch;font-family:var(--font-display),Georgia,serif;font-size:clamp(2.3rem,4.6vw,4rem);font-weight:500;line-height:1.02;letter-spacing:-.035em}
 .footer-bottom{display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line);font-size:.82rem}
