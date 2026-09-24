@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DirectoryControl } from "@/components/directory-control";
 import { DemoApplications } from "@/components/demo-applications";
+import { WorkshopSubmissions } from "@/components/workshop-submissions";
 import { ProfileAvatar, ProfileEditor, type Candidate } from "@/components/profile-editor";
 import type { ProfileView } from "@/lib/profile-rules";
 import { willSendAutomatically, describeSendState } from "@/lib/send-state";
@@ -34,7 +35,7 @@ export function EventsClient() {
   const [pw, setPw] = useState("");
   const [authed, setAuthed] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
-  const [tab, setTab] = useState<"events" | "subscribers" | "demos">("events");
+  const [tab, setTab] = useState<"events" | "subscribers" | "demos" | "workshops">("events");
   const [confirm, setConfirm] = useState<Confirm | null>(null);
 
   const authFetch = useAuthFetch(user, () => setAuthed(false));
@@ -78,6 +79,7 @@ export function EventsClient() {
           { key: "events", label: "Events" },
           { key: "subscribers", label: "Subscribers" },
           { key: "demos", label: "Demo applications" },
+          { key: "workshops", label: "Workshop submissions" },
         ] as const).map((t) => (
           <button
             key={t.key}
@@ -102,6 +104,7 @@ export function EventsClient() {
         )}
         {tab === "subscribers" && <Roster authFetch={authFetch} ask={setConfirm} />}
         {tab === "demos" && <DemoApplications authFetch={authFetch} />}
+        {tab === "workshops" && <WorkshopSubmissions authFetch={authFetch} />}
       </div>
 
       <ConfirmDialog confirm={confirm} onClose={() => setConfirm(null)} />

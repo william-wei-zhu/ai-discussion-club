@@ -14,6 +14,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { CopyLine } from "./copy-line";
 import { IdeaPicker } from "./idea-picker";
+import { WorkshopSubmitForm } from "./submit-form";
 import type { WorkshopStep } from "@/lib/workshops/types";
 
 // The tutorial as a slide deck. A step is not a page: at `lg` and up each one is
@@ -32,9 +33,11 @@ import type { WorkshopStep } from "@/lib/workshops/types";
 // Shared by every workshop: each one passes its own steps and its own progress
 // key, so two decks never resume each other's position.
 export function WorkshopWizard({
+  workshop,
   steps,
   storageKey,
 }: {
+  workshop: string;
   steps: WorkshopStep[];
   storageKey: string;
 }) {
@@ -313,6 +316,7 @@ export function WorkshopWizard({
           active={i === index}
           isLast={i === total - 1}
           headingRef={i === index ? headingRef : undefined}
+          workshop={workshop}
           onNext={() => go(i + 1)}
           onBack={() => go(i - 1)}
         />
@@ -327,6 +331,7 @@ function StepPanel({
   active,
   isLast,
   headingRef,
+  workshop,
   onNext,
   onBack,
 }: {
@@ -335,6 +340,7 @@ function StepPanel({
   active: boolean;
   isLast: boolean;
   headingRef?: React.RefObject<HTMLHeadingElement | null>;
+  workshop: string;
   onNext: () => void;
   onBack: () => void;
 }) {
@@ -493,6 +499,8 @@ function StepPanel({
               </p>
             </div>
           ) : null}
+
+          {step.submit ? <WorkshopSubmitForm workshop={workshop} /> : null}
         </div>
 
         {/* Outside the scroll area, so it is always reachable. Back sits left of

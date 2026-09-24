@@ -285,14 +285,11 @@ export const CLAUDE_STEPS: WorkshopStep[] = [
     title: "Now show it to someone",
     lines: [
       "You built an app and put it on the internet. That is the same loop professional builders use every day.",
-      "One thing left. Open Feedback Lab and paste your app's web address. You get an instant review of it, plus a page where other builders can tell you what to fix next.",
+      "One thing left. Add your name and your app's web address to the workshop gallery, so the room can see what everyone built.",
     ],
-    // Feedback Lab's own submit box lives on that site, so this slide hands
-    // off to it rather than rebuilding a submit flow here.
-    links: [{ href: "https://feedbacklab.app/", label: "Get feedback on Feedback Lab" }],
-    note: "No account needed. You get a page you can share with anyone.",
-    // No picture: the previous slide already showed the live app, so this one
-    // runs as a single centred column around the button.
+    // The submit form is the payoff and wants the room, so no picture: the
+    // slide runs as a single centred column.
+    submit: true,
   },
   {
     id: "ai-build-club",
@@ -375,13 +372,6 @@ export const CLAUDE_STEPS: WorkshopStep[] = [
       {
         text: "Make an account at exa.ai.",
         link: { href: "https://exa.ai/", label: "Open exa.ai" },
-      },
-      {
-        text: "Claim your free $50 of credit.",
-        link: {
-          href: "https://dashboard.exa.ai/billing?coupon=EXA50BUILDWITHCLAUDE",
-          label: "Claim $50",
-        },
       },
       "In the Claude app, open Connectors, then Discover, then Directory.",
       "Type exa in the search box, then click the plus on Exa to add it.",

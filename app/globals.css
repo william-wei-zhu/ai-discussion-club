@@ -144,3 +144,14 @@
 @media(min-width:64rem){body.ws-deck .site-footer{display:none}}
 /* Projected: the stage owns the whole screen, with no site chrome to subtract. */
 .ws-slide:fullscreen{width:100%;max-width:none;height:100dvh;padding-inline:5vw;background:var(--background)}
+/* Workshop gallery form (finish slide) and the /workshops/submissions list. */
+.ws-submit{display:flex;flex-direction:column;gap:16px;padding:22px 24px;border:2px solid var(--accent);border-radius:22px;background:var(--tint)}
+.ws-submit label{font-size:.95rem}
+.workshops-actions{margin-top:26px}
+.gallery-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.gallery-item{display:flex;flex-direction:column;gap:6px;height:100%;padding:22px 24px;text-decoration:none;color:var(--foreground);border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 40%,var(--background));transition:transform .3s cubic-bezier(.2,.7,.2,1),box-shadow .3s,border-color .3s}
+.gallery-item:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--accent)}
+.gallery-name{font-family:var(--font-display),Georgia,serif;font-size:1.6rem;line-height:1.1;letter-spacing:-.02em}
+.gallery-host{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:500;overflow-wrap:anywhere}
+.gallery-meta{margin-top:auto;padding-top:8px;font-size:.8rem}
+@media(max-width:700px){.ws-submit{padding:18px}.gallery-list{grid-template-columns:1fr}}

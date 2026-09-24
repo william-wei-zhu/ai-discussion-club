@@ -17,3 +17,4 @@ Verification:
 Scaling: public query reads all public events and filters/paginates in memory, reasonable for current 22 records. Move pagination/filtering into indexed queries when the catalog reaches hundreds of events. No broad client cache: request-time status avoids stale upcoming dates. Snapshot update is an explicit editorial/build operation and must continue to use only source-confirmed public records.
 
 2026-09-24: Added /workshops (card index) and the Claude workshop deck; Workshops is in the header (hidden under 700px like About) and footer, plus the sitemap. Verified at 1440x900 CSS (one viewport tall, no footer), dark theme, and 390px (stacked, no horizontal overflow).
+2026-09-24: Workshop gallery form on the Claude deck's finish slide, shared /workshops/submissions page, admin hide tab. Verified submit, validation errors, honeypot, admin 401s, hide-removes-from-gallery, and 390px layout; test doc deleted.

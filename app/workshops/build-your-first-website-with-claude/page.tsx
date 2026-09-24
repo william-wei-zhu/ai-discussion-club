@@ -20,5 +20,5 @@ export const metadata: Metadata = {
 // No page hero: it would cost roughly a third of the vertical space on every
 // slide. The title lives on step 1, which is the title slide.
 export default function ClaudeWorkshopPage() {
-  return <WorkshopWizard steps={CLAUDE_STEPS} storageKey="adc-workshop-claude-step" />;
+  return <WorkshopWizard workshop="build-your-first-website-with-claude" steps={CLAUDE_STEPS} storageKey="adc-workshop-claude-step" />;
 }

@@ -36,6 +36,9 @@ export type WorkshopStep = {
   // A smaller aside. Rides in the left column on a two-column slide, since it
   // is secondary and moving it is what keeps the instruction column short.
   note?: string;
+  // Shows the gallery form (name + app link) that adds the reader to
+  // /workshops/submissions. Used on the finish slide.
+  submit?: boolean;
   // Run as one centred column instead of the two-column slide, for a step whose
   // main content wants the full width.
   wide?: boolean;
