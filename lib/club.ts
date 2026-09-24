@@ -1946,6 +1946,142 @@ export function isArmed(event: Pick<ClubEvent, "autoSend">): boolean {
   return !!event.autoSend;
 }
 
+// --- Connect: the "Connect with fellow participants" email at event end ------
+
+import { connectRecipients } from "@/lib/connect";
+import { ensureDirectoryLink } from "@/lib/directory";
+import { sendClubConnectEmail } from "@/lib/resend";
+
+export interface ConnectResult {
+  eventId: string;
+  sent: number;
+  skipped: number;
+  failed: number;
+  remaining: number;
+  done: boolean;
+  reason?: string;
+}
+
+// Claim one recipient's connect receipt so two overlapping ticks never double-send.
+async function claimConnect(ref: FirebaseFirestore.DocumentReference, now: number): Promise<boolean> {
+  try {
+    return await db().runTransaction(async (tx) => {
+      const d = (await tx.get(ref)).data() as { emailedAt?: number; failedAt?: number; claimedAt?: number } | undefined;
+      if (d?.emailedAt || d?.failedAt) return false;
+      if (d?.claimedAt && now - d.claimedAt < CLAIM_STALE_MS) return false;
+      tx.set(ref, { claimedAt: now }, { merge: true });
+      return true;
+    });
+  } catch {
+    return false;
+  }
+}
+
+async function connectAudience(eventId: string) {
+  const guests = await getEventGuests(eventId);
+  const refs = guests.map((g) => db().collection(CONTACTS).doc(g.id));
+  const docs = refs.length ? await db().getAll(...refs) : [];
+  const contacts = new Map(docs.map((d) => [d.id, d.data() as ClubContact | undefined]));
+  return connectRecipients(guests, (id) => !!contacts.get(id)?.emailOptOut || !!contacts.get(id)?.emailBouncedAt);
+}
+
+/** Who a connect send would reach right now, without sending (cron dry run). */
+export async function previewConnect(eventId: string) {
+  const recipients = await connectAudience(eventId);
+  const receipts = await db().collection(EVENTS).doc(eventId).collection("connect").get();
+  const done = new Set(receipts.docs.filter((d) => d.data().emailedAt || d.data().failedAt).map((d) => d.id));
+  return { recipients: recipients.length, pending: recipients.filter((r) => !done.has(r.id)).length };
+}
+
+/**
+ * One resumable batch of the connect email. Syncs the guest list, makes sure the
+ * event has a fixed directory link (respecting an admin revoke), then emails every
+ * guest who was going, one receipt per recipient in clubEvents/{id}/connect.
+ */
+export async function sendConnectBlast(opts: { eventId: string; limit?: number; deadlineMs?: number }): Promise<ConnectResult> {
+  const deadline = opts.deadlineMs ?? Date.now() + 240_000;
+  const limit = Math.max(1, opts.limit ?? SEND_BATCH);
+  const event = await getEvent(opts.eventId);
+  if (!event) throw new Error(`Unknown event ${opts.eventId}`);
+  const eventRef = db().collection(EVENTS).doc(event.id);
+  const base: ConnectResult = { eventId: event.id, sent: 0, skipped: 0, failed: 0, remaining: 0, done: false };
+
+  await syncEventGuests(event.id);
+  const url = await ensureDirectoryLink(event.id, "connect-job");
+  if (!url) {
+    await eventRef.set({ connect: { startedAt: Date.now(), sent: 0, skipped: 0, failed: 0, completedAt: Date.now(), error: "Directory link is revoked, so no connect email was sent." } }, { merge: true });
+    return { ...base, done: true, reason: "directory-revoked" };
+  }
+
+  const recipients = await connectAudience(event.id);
+  const receipts = eventRef.collection("connect");
+  const existing = await receipts.get();
+  const finished = new Set(existing.docs.filter((d) => d.data().emailedAt || d.data().failedAt).map((d) => d.id));
+  const pending = recipients.filter((r) => !finished.has(r.id));
+
+  await eventRef.set({ connect: { startedAt: event.connect?.startedAt ?? Date.now(), lastTickAt: Date.now() } }, { merge: true });
+
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  for (const guest of pending) {
+    if (sent >= limit || Date.now() > deadline) break;
+    const ref = receipts.doc(guest.id);
+    if (!(await claimConnect(ref, Date.now()))) {
+      skipped++;
+      continue;
+    }
+    try {
+      const res = await sendClubConnectEmail({ toName: guest.name, toEmail: guest.email, toId: guest.id, eventName: event.name, directoryUrl: url });
+      await ref.set(stripUndefined({ emailedAt: Date.now(), resendId: res.data.id, email: guest.email }), { merge: true });
+      sent++;
+    } catch (e) {
+      failed++;
+      const message = (e as Error).message;
+      console.error("[club connect]", guest.id, message);
+      await ref.set({ failedAt: Date.now(), error: message, claimedAt: FieldValue.delete() }, { merge: true });
+      if (/invalid|bounce|not exist|rejected/i.test(message)) {
+        await db().collection(CONTACTS).doc(guest.id).set({ emailBouncedAt: Date.now() }, { merge: true });
+      }
+    }
+    if (sent < limit) await new Promise((r) => setTimeout(r, SEND_PACING_MS));
+  }
+
+  const remaining = Math.max(0, pending.length - sent - skipped - failed);
+  const done = remaining === 0;
+  const prev = event.connect;
+  await eventRef.set({
+    connect: {
+      startedAt: prev?.startedAt ?? Date.now(),
+      sent: (prev?.sent ?? 0) + sent,
+      skipped: (prev?.skipped ?? 0) + skipped,
+      failed: (prev?.failed ?? 0) + failed,
+      lastTickAt: Date.now(),
+      ...(done ? { completedAt: Date.now() } : {}),
+    },
+  }, { merge: true });
+  return { eventId: event.id, sent, skipped, failed, remaining, done };
+}
+
+/** Admin test: one guest's connect email, sent to the admin only. */
+export async function sendConnectTest(eventId: string) {
+  const event = await getEvent(eventId);
+  if (!event) throw new Error("Unknown event.");
+  const url = await ensureDirectoryLink(eventId, "verified admin");
+  if (!url) throw new Error("The directory link is revoked. Create a link first.");
+  const guests = await getEventGuests(eventId);
+  const sample = guests.find((g) => g.approvalStatus === "approved" && g.email) ?? guests.find((g) => g.email);
+  const res = await sendClubConnectEmail({
+    toName: sample?.name ?? "Guest",
+    toEmail: sample?.email ?? "guest@example.com",
+    toId: sample?.id ?? "test",
+    eventName: event.name,
+    directoryUrl: url,
+    test: true,
+  });
+  return { id: res.data.id, eventName: event.name, directoryUrl: url };
+}
+
 // The coherent send-state helpers live in a client-safe module (no firebase-admin)
 // so the admin UI and the server share one source of truth. Re-exported here for
 // server callers that already import from lib/club.

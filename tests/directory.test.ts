@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hashToken, isDirectoryToken, randomUrlToken, toDirectoryCard, trustedLinkedIn, trustedLinkedInPhoto, trustedPhotoUrl, visibleDirectoryMember } from "../lib/directory";
+import { decryptToken, encryptToken, hashToken, isDirectoryToken, randomUrlToken, toDirectoryCard, trustedLinkedIn, trustedLinkedInPhoto, trustedPhotoUrl, visibleDirectoryMember } from "../lib/directory";
 
 test("directory tokens are random URL-safe values stored by hash", () => {
   const a = randomUrlToken();
@@ -51,4 +51,17 @@ test("directory prefers a trusted LinkedIn photo, falling back to Luma", () => {
   assert.equal(toDirectoryCard({ guest, contact: { name: "Ada", linkedinUrl: "linkedin.com/in/ada", linkedinConfidence: "high", linkedinPhoto: "/api/img/avatars/a.jpg", avatarUrl: luma } })?.photoUrl, "/api/img/avatars/a.jpg");
   // Low-confidence LinkedIn: neither link nor photo, so Luma is used.
   assert.equal(toDirectoryCard({ guest, contact: { name: "Ada", linkedinUrl: "linkedin.com/in/ada", linkedinConfidence: "low", linkedinPhoto: "/api/img/avatars/a.jpg", avatarUrl: luma } })?.photoUrl, luma);
+});
+
+test("fixed directory links round-trip through encryption, and a wrong key fails", () => {
+  const token = randomUrlToken();
+  const enc = encryptToken(token, "secret-one");
+  assert.ok(enc);
+  assert.notEqual(enc, token);
+  assert.equal(decryptToken(enc, "secret-one"), token);
+  assert.equal(decryptToken(enc, "secret-two"), null);
+  assert.equal(decryptToken("garbage", "secret-one"), null);
+  assert.equal(decryptToken(undefined, "secret-one"), null);
+  // Fresh IV every time: the same token never encrypts to the same string.
+  assert.notEqual(encryptToken(token, "secret-one"), enc);
 });

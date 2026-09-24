@@ -258,6 +258,71 @@ ${
   return assertResendSuccess(result);
 }
 
+export interface ClubConnectParams {
+  toName: string;
+  toEmail: string;
+  toId: string; // Luma user_api_id, the unsubscribe token subject
+  eventName: string;
+  directoryUrl: string;
+  test?: boolean; // marks the subject and redirects to the admin
+  testTo?: string;
+}
+
+/**
+ * The email every guest who was going gets when the event ends: a link to the
+ * event's private directory, so they can find the people they met (or missed).
+ */
+export async function sendClubConnectEmail(p: ClubConnectParams) {
+  if (!p.test && process.env.EMAIL_SENDING_ENABLED !== "true") {
+    throw new Error("Attendee email sending is disabled.");
+  }
+  const directory = safeHref(p.directoryUrl);
+  if (!directory) throw new Error("A valid directory link is required.");
+  const unsubToken = clubUnsubscribeToken(p.toId);
+  const unsubUrl = unsubToken ? `${BASE}/api/club-unsubscribe?t=${unsubToken}` : null;
+
+  const inner = `
+${clubHeader()}
+<p style="margin:0;color:#555">${esc(p.eventName)}</p>
+
+<p style="margin-top:24px">Hi ${esc(p.toName.split(" ")[0] || "there")},</p>
+
+<p>Thanks for coming. Everyone who was at the event is in one private directory, with their background and LinkedIn, so you can follow up with the people you met and reach the ones you missed.</p>
+
+${button(directory, "Connect with fellow participants", COPPER)}
+<p style="color:#444;font-size:14px">The link is private to this event&apos;s guests, so please don&apos;t share it publicly. Rather not be listed? <a href="${BASE}/preferences" style="color:#444">Update your preferences</a>.</p>
+${
+  unsubUrl
+    ? `<p style="color:#888;font-size:13px;margin-top:8px">Don&apos;t want emails like this? <a href="${unsubUrl}" style="color:#888">Unsubscribe</a>.</p>`
+    : ""
+}`;
+
+  const where = subjectEventName(p.eventName) || "the AI Discussion Club";
+  const subject = `${p.test ? "[test] " : ""}Connect with fellow participants from ${where}`;
+
+  const result = await resend().emails.send({
+    from: CLUB_FROM,
+    to: [p.test ? (p.testTo?.trim() || ADMIN_EMAIL) : p.toEmail],
+    replyTo: [ADMIN_EMAIL],
+    subject,
+    html: shell(
+      p.test
+        ? `<p style="margin:0 0 16px;padding:10px 12px;background:#f1e8df;border-radius:8px;font-size:14px;color:#444">Test copy. The real recipient would be ${esc(p.toName)} &lt;${esc(p.toEmail)}&gt;.</p>${inner}`
+        : inner,
+      `<a href="${CLUB_HOME}" style="color:#444">AI Discussion Club</a> · you are getting this because you were going to this event.`,
+    ),
+    ...(unsubUrl && !p.test
+      ? {
+          headers: {
+            "List-Unsubscribe": `<${unsubUrl}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        }
+      : {}),
+  });
+  return assertResendSuccess(result);
+}
+
 export interface ClubPreviewParams {
   eventName: string;
   eventWhen: string;

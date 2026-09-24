@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getEvent, getEvents, getRecs, isArmed, prepareEvent, sendEventBlast, syncEvents, syncEventGuests } from "@/lib/club";
+import { getEvent, getEvents, getRecs, isArmed, prepareEvent, previewConnect, sendConnectBlast, sendEventBlast, syncEvents, syncEventGuests, willSendAutomatically } from "@/lib/club";
+import { CONNECT_WINDOW_MS, connectTiming, eventEndMs } from "@/lib/connect";
 import { lumaConfigured } from "@/lib/luma";
 import type { ClubEvent } from "@/lib/types";
 
@@ -19,6 +20,15 @@ const SEND_EARLIEST_UTC = Number(process.env.CLUB_SEND_EARLIEST_UTC ?? 13);
 const QUIET_HOURS_OVERRIDE_AT = 6;
 
 const hoursOut = (e: ClubEvent, now: number) => (e.startAt - now) / 3_600_000;
+
+// Events that ended recently enough to still be in (or just past) the connect
+// window. Older events are ignored outright, so the 20+ historical events never
+// get stamped as "missed".
+const recentlyEnded = (events: ClubEvent[], now: number) =>
+  events.filter((e) => {
+    const end = eventEndMs(e);
+    return end <= now && now - end < 2 * CONNECT_WINDOW_MS && !e.connect?.completedAt;
+  });
 
 /**
  * The AI Discussion Club cron. Runs hourly and does AT MOST ONE phase per tick:
@@ -61,7 +71,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   // Manual overrides for testing. Gated behind the cron secret, so not world-callable.
   const forcedEvent = url.searchParams.get("eventId");
-  const forcedPhase = url.searchParams.get("phase"); // "prepare" | "send"
+  const forcedPhase = url.searchParams.get("phase"); // "prepare" | "send" | "connect"
   const force = url.searchParams.get("force") === "1";
   const limit = Number(url.searchParams.get("limit") ?? 0) || undefined;
 
@@ -106,7 +116,24 @@ export async function GET(req: Request) {
         const r = await sendEventBlast({ eventId: forcedEvent, limit, deadlineMs: deadline, ignoreCancelled: false });
         return NextResponse.json({ ok: true, phase: "send", forced: true, ...r, ms: Date.now() - started });
       }
-      return NextResponse.json({ error: "phase must be prepare or send" }, { status: 400 });
+      if (forcedPhase === "connect") {
+        // Dry by default, like a forced send: it emails every guest who was going.
+        if (url.searchParams.get("live") !== "1") {
+          return NextResponse.json({
+            ok: true,
+            phase: "connect",
+            forced: true,
+            dryRun: true,
+            hint: "add &live=1 to actually send",
+            eventId: forcedEvent,
+            ...(await previewConnect(forcedEvent)),
+            ms: Date.now() - started,
+          });
+        }
+        const r = await sendConnectBlast({ eventId: forcedEvent, limit, deadlineMs: deadline });
+        return NextResponse.json({ ok: true, phase: "connect", forced: true, ...r, ms: Date.now() - started });
+      }
+      return NextResponse.json({ error: "phase must be prepare, send or connect" }, { status: 400 });
     }
 
     // Cheap idle path: Firestore only.
@@ -125,7 +152,7 @@ export async function GET(req: Request) {
           .filter((e) => hoursOut(e, now) > 0 && hoursOut(e, now) <= HORIZON)
           .sort((a, b) => a.startAt - b.startAt);
       }
-      if (!upcoming.length) {
+      if (!upcoming.length && !recentlyEnded(events, now).length) {
         return NextResponse.json({ ok: true, skipped: "nothing-within-horizon", ms: Date.now() - started });
       }
     }
@@ -165,6 +192,19 @@ export async function GET(req: Request) {
       }
     }
 
+    // CONNECT at event end: "Connect with fellow participants" + the directory link.
+    // Runs only when no pre-event phase needed this tick (one phase per tick).
+    for (const event of recentlyEnded(events, now)) {
+      if (!willSendAutomatically(event)) continue;
+      if (!(event.counts?.approved > 0)) continue;
+      if (connectTiming(event, now) === "missed") {
+        await db_stampConnectMissed(event.id);
+        continue;
+      }
+      const r = await sendConnectBlast({ eventId: event.id, limit, deadlineMs: deadline });
+      return NextResponse.json({ ok: true, phase: "connect", ...r, ms: Date.now() - started });
+    }
+
     return NextResponse.json({
       ok: true,
       skipped: "nothing-due",
@@ -188,6 +228,18 @@ async function db_stampGiveUp(eventId: string) {
     .doc(eventId)
     .set(
       { prepare: { startedAt: Date.now(), error: "Missed the prepare window (less than 4 hours out)." } },
+      { merge: true },
+    );
+}
+
+// The connect email's window (24h after the end) passed without a successful run.
+async function db_stampConnectMissed(eventId: string) {
+  const { db } = await import("@/lib/firebase-admin");
+  await db()
+    .collection("clubEvents")
+    .doc(eventId)
+    .set(
+      { connect: { startedAt: Date.now(), sent: 0, skipped: 0, failed: 0, completedAt: Date.now(), error: "Missed the connect window (more than 24 hours after the event ended)." } },
       { merge: true },
     );
 }

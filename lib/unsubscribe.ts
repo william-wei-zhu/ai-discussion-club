@@ -8,7 +8,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 // Signing secret: a dedicated UNSUBSCRIBE_SECRET if set, else CRON_SECRET (both
 // are server-only and present wherever the digest is generated). Returns "" when
 // neither is configured, in which case the caller omits the header/link entirely.
-function secret(): string {
+export function secret(): string {
   return process.env.UNSUBSCRIBE_SECRET ?? process.env.CRON_SECRET ?? "";
 }
 

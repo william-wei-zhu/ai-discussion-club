@@ -15,3 +15,8 @@ Set EMAIL_SENDING_ENABLED=true only after owner-only test delivery, unsubscribe 
 ## Missing integrations
 
 Luma and Exa require new keys supplied by the owner. Site event browsing reads the verified copy in the independent Firestore database. The explicit snapshot mode is only a bootstrap option. The admin displays missing integrations and blocks unavailable actions; no fake success or provider-less send receipts.
+
+## Connect email at event end
+
+When an event ends (first hourly cron tick after Luma's `end_at`, else start + 2h), every guest who was going plus hosts, minus unsubscribed or bounced addresses, gets "Connect with fellow participants from {event}" with the event's private directory link. It is controlled by the same per-event automatic-sending switch as the pre-event email, sends only within 24 hours of the end (after that the event is stamped as missed), and keeps one receipt per recipient in `clubEvents/{id}/connect/{guestId}` so a re-run never double-sends. Directory links are fixed: the token is stored encrypted (`tokenEnc`, AES-256-GCM, key derived from `UNSUBSCRIBE_SECRET`/`CRON_SECRET`) next to its hash, so admin always shows the link and the job reuses it. A link made before this change (hash only) is replaced once. A revoked directory means no connect email. Admin has "Send connect email to me"; the cron accepts `?eventId=&phase=connect` as a dry run, `&live=1` to send.
+

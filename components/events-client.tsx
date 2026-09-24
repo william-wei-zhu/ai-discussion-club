@@ -122,6 +122,7 @@ interface EventRow {
   prepare?: { completedAt?: number; recipients?: number; zeroSignal?: number; error?: string };
   previewEmailedAt?: number;
   send?: { completedAt?: number; sent: number; skipped: number; failed: number };
+  connect?: { completedAt?: number; sent: number; skipped: number; failed: number; error?: string };
   registrationQuestions?: { id: string; label: string; questionType: string }[];
   /** Attendees who have never had a profile lookup. Upcoming events only. */
   pendingLookup?: number;
@@ -429,6 +430,21 @@ function EventCard({
         </p>
       )}
 
+      {/* The connect email at event end: "Connect with fellow participants" + directory. */}
+      {(upcoming || e.connect) && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {e.connect?.error
+            ? `Connect email: ${e.connect.error}`
+            : e.connect?.completedAt
+              ? `Connect email sent to ${e.connect.sent} people${e.connect.failed ? `, ${e.connect.failed} failed` : ""}`
+              : e.connect
+                ? `Connect email sending now, ${e.connect.sent ?? 0} out so far`
+                : send.kind === "scheduled" || send.kind === "sent" || send.kind === "sending"
+                  ? "Connect email with the directory link goes out when the event ends"
+                  : "Connect email will not send unless automatic sending is on"}
+        </p>
+      )}
+
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button variant={selected ? "default" : "outline"} size="sm" onClick={onSelect}>
           {selected ? "Viewing guests" : "View guests"}
@@ -453,6 +469,19 @@ function EventCard({
           }
         >
           {acting === "prepare" ? "Working out matches…" : "Work out the matches now"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={acting !== null}
+          onClick={() =>
+            act("connect-test", async () => {
+              await authFetch(`/api/events/${e.id}/connect-test`, { method: "POST" });
+              return "Connect email sent to your admin address, marked [test]. The directory link is now fixed.";
+            })
+          }
+        >
+          {acting === "connect-test" ? "Sending…" : "Send connect email to me"}
         </Button>
         <Button
           variant="outline"

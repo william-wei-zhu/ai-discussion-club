@@ -404,6 +404,16 @@ export interface ClubEvent {
     lastTickAt?: number;
     error?: string;
   };
+  // The "Connect with fellow participants" email sent when the event ends.
+  connect?: {
+    startedAt: number;
+    completedAt?: number;
+    sent: number;
+    skipped: number;
+    failed: number;
+    lastTickAt?: number;
+    error?: string;
+  };
   syncedAt: number;
 }
 
