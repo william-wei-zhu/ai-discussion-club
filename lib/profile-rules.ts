@@ -87,3 +87,18 @@ export function sniffImage(bytes: Uint8Array): 'jpeg' | 'png' | 'webp' | null {
 }
 
 export const MAX_PHOTO_BYTES = 4 * 1024 * 1024; // under Vercel's ~4.5 MB request body limit
+
+/** What someone's directory card and emails show right now, and where each part came from. */
+export function profileView(c: (PhotoFields & { name?: unknown; headline?: unknown }) | undefined) {
+  const photo = c ? profilePhoto(c) : undefined;
+  return {
+    name: typeof c?.name === 'string' ? c.name : '',
+    headline: typeof c?.headline === 'string' ? c.headline : '',
+    linkedinUrl: (c && trustedLinkedInUrl(c)) || '',
+    linkedinSource: c && isTrustedLinkedIn(c) && typeof c.linkedinSource === 'string' ? c.linkedinSource : '',
+    photoUrl: photo?.url ?? '',
+    photoSource: photo?.source ?? 'none',
+    uploadedPhoto: !!storedPhoto(c?.photoUrl),
+  };
+}
+export type ProfileView = ReturnType<typeof profileView>;

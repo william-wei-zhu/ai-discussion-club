@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { bearerMatches } from "@/lib/cron-sync";
 import { enrichContacts, getEvents } from "@/lib/club";
 import { lumaConfigured } from "@/lib/luma";
 
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   // Fail closed: a missing CRON_SECRET must not make a paid-enrichment job public.
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (!bearerMatches(auth, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (process.env.JOBS_ENABLED !== "true") {

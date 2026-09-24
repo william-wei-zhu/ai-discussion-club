@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "crypto";
+import { FieldValue } from "firebase-admin/firestore";
 import { db } from "@/lib/firebase-admin";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
 import { profilePhoto } from "@/lib/profile-rules";
@@ -71,20 +72,53 @@ export async function directoryUrlFor(eventId: string): Promise<string | null> {
   return token ? directoryUrl(token) : null;
 }
 
-// Create (or replace) the event's link. Replacing invalidates the old URL.
-export async function issueDirectoryLink(eventId: string, by: string): Promise<{ url: string; version: number }> {
+// Create (or replace) the event's link. Replacing invalidates the old URL. Runs in a
+// transaction so two concurrent callers (an admin click and a cron tick) cannot
+// rotate twice and invalidate a link one of them just emailed. `onlyIfUnusable`
+// makes it a no-op when a working link already exists (the connect job's case).
+export async function issueDirectoryLink(eventId: string, by: string, opts: { onlyIfUnusable?: boolean } = {}): Promise<{ url: string; version: number }> {
   const ref = db().collection(DIRECTORY_ACCESS).doc(eventId);
-  const current = await ref.get();
-  const token = randomUrlToken();
-  const tokenEnc = encryptToken(token);
-  if (!tokenEnc) throw new Error("No server secret is configured for directory links.");
-  const now = Date.now();
-  const version = Number(current.data()?.version || 0) + 1;
-  await ref.set({
-    tokenHash: hashToken(token), tokenEnc, enabled: true, version,
-    ...(current.exists ? { rotatedAt: now, rotatedBy: by } : { createdAt: now, createdBy: by }),
-  }, { merge: true });
-  return { url: directoryUrl(token), version };
+  return db().runTransaction(async (tx) => {
+    const current = await tx.get(ref);
+    const data = current.data();
+    if (opts.onlyIfUnusable && data?.enabled === true) {
+      const existing = decryptToken(data.tokenEnc);
+      if (existing) return { url: directoryUrl(existing), version: Number(data.version || 0) };
+    }
+    const token = randomUrlToken();
+    const tokenEnc = encryptToken(token);
+    if (!tokenEnc) throw new Error("No server secret is configured for directory links.");
+    const now = Date.now();
+    const version = Number(data?.version || 0) + 1;
+    tx.set(ref, {
+      tokenHash: hashToken(token), tokenEnc, enabled: true, version,
+      revokedAt: FieldValue.delete(), revokedBy: FieldValue.delete(),
+      ...(current.exists ? { rotatedAt: now, rotatedBy: by } : { createdAt: now, createdBy: by }),
+    }, { merge: true });
+    return { url: directoryUrl(token), version };
+  });
+}
+
+export type DirectoryStatus = { enabled: boolean; url?: string; version?: number; createdAt?: number; rotatedAt?: number; revokedAt?: number };
+
+// What the admin console shows for an event's link. The link is fixed: shown every
+// time. A legacy hash-only link has no url and must be replaced once. revokedAt is
+// only reported while the link is actually off.
+export function directoryStatus(data: Record<string, unknown> | undefined): DirectoryStatus {
+  const enabled = data?.enabled === true;
+  const token = enabled ? decryptToken(data?.tokenEnc) : null;
+  const num = (v: unknown) => (typeof v === "number" ? v : undefined);
+  return stripEmpty({
+    enabled,
+    url: token ? directoryUrl(token) : undefined,
+    version: num(data?.version),
+    createdAt: num(data?.createdAt),
+    rotatedAt: num(data?.rotatedAt),
+    revokedAt: enabled ? undefined : num(data?.revokedAt),
+  });
+}
+function stripEmpty<T extends Record<string, unknown>>(o: T): T {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
 }
 
 // For the connect job: reuse a fixed link, respect an admin revoke, and otherwise
@@ -96,7 +130,7 @@ export async function ensureDirectoryLink(eventId: string, by: string): Promise<
     const token = decryptToken(data.tokenEnc);
     if (token) return directoryUrl(token);
   }
-  return (await issueDirectoryLink(eventId, by)).url;
+  return (await issueDirectoryLink(eventId, by, { onlyIfUnusable: true })).url;
 }
 
 export function isDirectoryToken(token: string): boolean {

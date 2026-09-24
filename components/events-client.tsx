@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DirectoryControl } from "@/components/directory-control";
+import { ProfileAvatar, ProfileEditor, type Candidate } from "@/components/profile-editor";
+import type { ProfileView } from "@/lib/profile-rules";
 import { willSendAutomatically, describeSendState } from "@/lib/send-state";
+import type { DirectoryStatus } from "@/lib/directory";
 import {
   PW_KEY,
   Gate,
@@ -58,7 +61,7 @@ export function EventsClient() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-heading text-3xl font-bold sm:text-4xl">AI Discussion Club</h1>
         <button
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          className="rounded-lg border px-3 py-1.5 text-sm"
           onClick={() => {
             sessionStorage.removeItem(PW_KEY);
             setAuthed(false);
@@ -69,13 +72,15 @@ export function EventsClient() {
       </div>
 
       {/* Segmented tab bar (no shadcn Tabs component; mirror the app's pill idiom). */}
-      <div className="mt-5 flex flex-wrap gap-1 rounded-xl border p-1">
+      <div role="tablist" aria-label="Console sections" className="mt-5 flex flex-wrap gap-1 rounded-xl border p-1">
         {([
           { key: "events", label: "Events" },
           { key: "subscribers", label: "Subscribers" },
         ] as const).map((t) => (
           <button
             key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
             className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
               tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
@@ -126,6 +131,7 @@ interface EventRow {
   registrationQuestions?: { id: string; label: string; questionType: string }[];
   /** Attendees who have never had a profile lookup. Upcoming events only. */
   pendingLookup?: number;
+  directory?: DirectoryStatus;
 }
 
 // The event's local start, in the event's own timezone (a DC event reads as 3:00 PM
@@ -158,15 +164,7 @@ function Events({
   onSelect: (id: string) => void;
   ask: (c: Confirm) => void;
 }) {
-  const { data, err, loading, reload } = useLoad<{
-    events: EventRow[];
-    setup: { luma: boolean; gemini: boolean; exa: boolean; resend: boolean; jobsEnabled: boolean; emailSendingEnabled: boolean };
-  }>(
-    () => authFetch("/api/events/list") as Promise<{
-      events: EventRow[];
-      setup: { luma: boolean; gemini: boolean; exa: boolean; resend: boolean; jobsEnabled: boolean; emailSendingEnabled: boolean };
-    }>,
-  );
+  const { data, err, loading, refreshing, reload } = useLoad<EventList>(() => authFetch("/api/events/list") as Promise<EventList>);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [showPast, setShowPast] = useState(false);
@@ -188,28 +186,8 @@ function Events({
     }
   }
 
-  async function syncGuests(id: string) {
-    setBusy(id);
-    setMsg(null);
-    try {
-      const r = (await authFetch("/api/events/sync", {
-        method: "POST",
-        body: JSON.stringify({ eventId: id }),
-      })) as { guests?: number; counts?: { approved: number }; linkedinPromoted?: number };
-      setMsg(
-        `Synced ${r.guests ?? 0} registrations for ${id} (${r.counts?.approved ?? 0} confirmed)` +
-          (r.linkedinPromoted ? `, promoted ${r.linkedinPromoted} LinkedIn URLs.` : "."),
-      );
-      reload();
-    } catch (e) {
-      setMsg((e as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  if (loading) return <p className="mt-8 text-muted-foreground">Loading…</p>;
-  if (err) return <p className="note mt-8 text-sm">{err}</p>;
+  if (loading) return <p className="mt-8 text-muted-foreground">Loading events…</p>;
+  if (err && !data) return <p className="note mt-8 text-sm">{err} <Button variant="outline" size="sm" onClick={reload}>Try again</Button></p>;
 
   const all = data?.events ?? [];
   const upcoming = all.filter((e) => e.hoursUntil > 0).sort((a, b) => a.startAt - b.startAt);
@@ -229,30 +207,33 @@ function Events({
         </div>
       )}
       <p className="text-sm text-muted-foreground">
-        Two days before each event, everyone confirmed gets one email listing 5 people to meet, with a reason for each.
-        You get a preview first and can stop it any time before it goes out.
+        Matches are worked out 48 hours before each event and you get a preview. 24 hours before, every confirmed guest
+        gets one email with 5 people to meet. When the event ends, they get the private directory. New events send
+        automatically; you can stop any event&apos;s emails until they go out.
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={syncCalendar} disabled={busy === "calendar"}>
           {busy === "calendar" ? "Syncing…" : "Sync calendar from Luma"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => setShowPast((v) => !v)}>
-          {showPast ? "Hide past events" : `Show ${past.length} past events`}
-        </Button>
+        {past.length > 0 && (
+          <Button variant="outline" size="sm" onClick={() => setShowPast((v) => !v)}>
+            {showPast ? "Hide past events" : `Show ${past.length} past events`}
+          </Button>
+        )}
+        {refreshing && <span className="text-xs text-muted-foreground" role="status">Refreshing…</span>}
       </div>
       {msg && <p className="note mt-2 text-sm">{msg}</p>}
+      {err && <p className="note mt-2 text-sm">Could not refresh: {err}</p>}
 
       <div className="mt-3 space-y-3">
-        {upcoming.length === 0 && <p className="text-sm text-muted-foreground">No upcoming events on the calendar.</p>}
+        {upcoming.length === 0 && <p className="text-sm text-muted-foreground">No upcoming events on the calendar. Create one on Luma, then sync.</p>}
         {[...upcoming, ...(showPast ? past : [])].map((e) => (
           <EventCard
             key={e.id}
             event={e}
             selected={selected === e.id}
             onSelect={() => onSelect(e.id)}
-            onSyncGuests={() => syncGuests(e.id)}
-            busy={busy === e.id}
             authFetch={authFetch}
             ask={ask}
             reload={reload}
@@ -263,12 +244,19 @@ function Events({
   );
 }
 
+type EventList = {
+  events: EventRow[];
+  setup: { luma: boolean; gemini: boolean; exa: boolean; resend: boolean; jobsEnabled: boolean; emailSendingEnabled: boolean };
+};
+
+// The connect email goes out at the end of the event, so its stop switch has to
+// outlive the start time. After a few days nothing is pending any more.
+const CONNECT_WINDOW_H = 72;
+
 function EventCard({
   event: e,
   selected,
   onSelect,
-  onSyncGuests,
-  busy,
   authFetch,
   ask,
   reload,
@@ -276,8 +264,6 @@ function EventCard({
   event: EventRow;
   selected: boolean;
   onSelect: () => void;
-  onSyncGuests: () => void;
-  busy: boolean;
   authFetch: Fetcher;
   ask: (c: Confirm) => void;
   reload: () => void;
@@ -296,12 +282,15 @@ function EventCard({
   // line below, so they can never contradict (the "cancelled + on at once" bug).
   const send = describeSendState(e);
   const willSend = willSendAutomatically(e);
+  // Anything still to send? The pre-event email until it has gone, then the connect
+  // email until it has gone (or the event is long over).
+  const emailsPending = upcoming ? !e.connect?.completedAt : e.hoursUntil > -CONNECT_WINDOW_H && !e.connect?.completedAt;
   const [acting, setActing] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
 
   // Long actions (prepare, enrich) report their own outcome inline rather than
-  // silently finishing: these spend money and change what ~100 people receive.
+  // silently finishing: these spend money and change what ~100 people receive. The
+  // list refresh runs in the background, so this note stays on screen.
   async function act(key: string, run: () => Promise<string>) {
     setActing(key);
     setNote(null);
@@ -315,254 +304,253 @@ function EventCard({
     }
   }
 
-  // The participant roster export. Not wrapped in `act()` (it neither spends money
-  // nor changes state, so it must not `reload()`); the server returns the .xlsx
-  // base64-encoded inside JSON (authFetch parses JSON, so it can't stream a binary
-  // body), which we decode to a Blob and hand to the browser as a download.
+  async function syncGuests() {
+    await act("sync", async () => {
+      const r = (await authFetch("/api/events/sync", { method: "POST", body: JSON.stringify({ eventId: e.id }) })) as {
+        guests?: number; counts?: { approved: number }; linkedinPromoted?: number;
+      };
+      return `Synced ${r.guests ?? 0} registrations (${r.counts?.approved ?? 0} confirmed)` +
+        (r.linkedinPromoted ? `, ${r.linkedinPromoted} LinkedIn links from registration answers.` : ".");
+    });
+  }
+
+  // The participant roster export. It neither spends money nor changes state, so it
+  // does not reload. The server returns the .xlsx base64-encoded inside JSON
+  // (authFetch parses JSON), decoded here into a Blob download.
   async function downloadParticipants() {
-    setDownloading(true);
+    setActing("download");
     setNote(null);
     try {
-      const r = (await authFetch(`/api/events/${e.id}/participants-xlsx`)) as {
-        xlsx: string;
-        filename: string;
-        count: number;
-      };
+      const r = (await authFetch(`/api/events/${e.id}/participants-xlsx`)) as { xlsx: string; filename: string; count: number };
       const bytes = Uint8Array.from(atob(r.xlsx), (ch) => ch.charCodeAt(0));
-      const blob = new Blob([bytes], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
       const a = document.createElement("a");
       a.href = url;
       a.download = r.filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      // Revoking synchronously can cancel the download in some browsers.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
       if (r.count === 0) setNote("No confirmed guests yet, so the sheet is empty.");
     } catch (err) {
       setNote((err as Error).message);
     } finally {
-      setDownloading(false);
+      setActing(null);
     }
   }
+
+  const prepare = () => ask({
+    title: e.prepare?.completedAt ? "Work out matches for new guests?" : "Work out the matches now?",
+    description: `Syncs registrations, then matches ${e.counts?.approved ?? 0} confirmed guests (uses AI credits) and emails you a preview. Guests already emailed are never changed.`,
+    confirmLabel: "Work out matches",
+    run: () => act("prepare", async () => {
+      const r = (await authFetch(`/api/events/${e.id}/prepare`, { method: "POST", body: JSON.stringify({ force: false }) })) as {
+        recipients?: number; zeroSignal?: number; done?: boolean; remaining?: number; previewSent?: boolean;
+      };
+      return `Matched ${r.recipients ?? 0} guests${r.zeroSignal ? `, ${r.zeroSignal} of whom we know nothing about` : ""}` +
+        (r.done ? "" : `, ${r.remaining} left for the next run`) +
+        (r.previewSent ? ". Preview emailed to you." : ".");
+    }),
+  });
+
+  const lookup = () => ask({
+    title: `Look up ${thisBatch} ${thisBatch === 1 ? "profile" : "profiles"}?`,
+    description: "Searches LinkedIn for guests we know nothing about (uses Exa and AI credits, within the daily caps). People who set their own LinkedIn are never searched.",
+    confirmLabel: "Look up profiles",
+    run: () => act("enrich", async () => {
+      const r = (await authFetch("/api/events/enrich", { method: "POST", body: JSON.stringify({ eventId: e.id, limit: LOOKUP_BATCH }) })) as {
+        considered?: number; signalsBuilt?: number; confirmed?: number; photos?: number;
+      };
+      return `Looked up ${r.considered ?? 0} guests: ${r.confirmed ?? 0} LinkedIn profiles found, ${r.photos ?? 0} photos, ${r.signalsBuilt ?? 0} now matchable.`;
+    }),
+  });
+
+  const connectTest = () => ask({
+    title: "Send yourself the connect email?",
+    description: e.directory?.enabled
+      ? "Sends the end-of-event email to your admin address, marked [test], using the current directory link."
+      : "Sends the end-of-event email to your admin address, marked [test]. This event has no directory link yet, so one will be created.",
+    confirmLabel: "Send test",
+    run: () => act("connect-test", async () => {
+      await authFetch(`/api/events/${e.id}/connect-test`, { method: "POST" });
+      return "Connect email sent to your admin address, marked [test].";
+    }),
+  });
+
+  const toggleSending = () => ask({
+    title: willSend ? "Stop this event's emails?" : e.cancelled ? "Resume this event's emails?" : "Turn on automatic emails?",
+    description: willSend
+      ? upcoming
+        ? `Neither the people-to-meet email (${e.prepare?.recipients ?? e.counts?.approved ?? 0} people) nor the connect email after the event will go out. You can resume any time before they send.`
+        : "The connect email after the event will not go out. You can resume while it is still pending."
+      : upcoming
+        ? `Every confirmed guest (${e.counts?.approved ?? 0} right now) gets the people-to-meet email 24 hours before, and the connect email when the event ends.`
+        : "The connect email with the directory link will go out to everyone who attended.",
+    confirmLabel: willSend ? "Stop the emails" : e.cancelled ? "Resume sending" : "Turn on",
+    danger: willSend,
+    run: async () => {
+      // Off = pause only (keep the arm). On = clear the pause and arm.
+      await authFetch(`/api/events/${e.id}/cancel`, {
+        method: "POST",
+        body: JSON.stringify(willSend ? { cancelled: true } : { cancelled: false, autoSend: true }),
+      });
+      reload();
+    },
+  });
+
   return (
     <div className={`orbit-card p-4 ${selected ? "ring-2 ring-primary" : ""}`}>
-      {e.coverUrl && <Image src={e.coverUrl} alt="" width={144} height={144} sizes="144px" className="mb-4 h-36 w-36 rounded-lg border border-border object-contain" />}
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-semibold">{e.name || e.id}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {eventWhen(e)}
-            {e.address ? ` · ${e.address}` : ""}
+      <div className="flex flex-wrap items-start gap-4">
+        {e.coverUrl && <Image src={e.coverUrl} alt="" width={96} height={96} sizes="96px" className="h-24 w-24 shrink-0 rounded-lg border border-border object-cover" />}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="font-semibold">{e.name || e.id}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {eventWhen(e)}
+                {e.address ? ` · ${e.address}` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {upcoming && <Badge>{e.hoursUntil < 48 ? `in ${Math.round(e.hoursUntil)}h` : `in ${Math.round(e.hoursUntil / 24)} days`}</Badge>}
+              {e.prepare?.completedAt && <Badge variant="secondary">matched</Badge>}
+              {/* One derived send-state badge, so "stopped" and "on" can never both show. */}
+              {(upcoming || emailsPending || send.kind === "sent" || send.kind === "sending") && (
+                <Badge variant={send.kind === "stopped" ? "destructive" : send.kind === "scheduled" ? "default" : send.kind === "off" ? "outline" : "secondary"}>
+                  {send.kind === "stopped" ? "emails stopped" : send.kind === "scheduled" ? "sends automatically" : send.kind === "off" ? "won't send" : send.kind === "sending" ? `sending · ${e.send?.sent ?? 0}` : `sent ${e.send?.sent ?? 0}`}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          <p className="mt-2 text-sm">
+            {e.counts?.approved ?? 0} confirmed · {e.counts?.invited ?? 0} invited · {e.counts?.declined ?? 0} declined
+            {e.counts?.checkedIn ? ` · ${e.counts.checkedIn} checked in` : ""}
+            {" · "}
+            <span className="text-muted-foreground">{e.guestsSyncedAt ? `registrations synced ${fmtTime(e.guestsSyncedAt)}` : "registrations never synced"}</span>
+          </p>
+          {/* The registration questions ARE the matching signal, so surface them. */}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {e.registrationQuestions?.length
+              ? `Asks: ${e.registrationQuestions.map((q) => q.label).filter(Boolean).join(" · ")}`
+              : "No registration questions, so no self-described signal."}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {upcoming && <Badge>in {Math.round(e.hoursUntil)}h</Badge>}
-          {e.prepare?.completedAt && <Badge variant="secondary">prepared</Badge>}
-          {/* One derived send-state badge, so "stopped" and "on" can never both show. */}
-          {(upcoming || send.kind === "sent" || send.kind === "sending" || e.cancelled) && (
-            <Badge
-              variant={
-                send.kind === "stopped"
-                  ? "destructive"
+      </div>
+
+      {/* The timeline, stated plainly: matches at T-48h, email at T-24h, connect at the end. */}
+      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+        {upcoming && (
+          <li>
+            {e.prepare?.completedAt
+              ? `Matches worked out ${fmtTime(e.prepare.completedAt)} for ${e.prepare.recipients ?? 0} people` +
+                (e.prepare.zeroSignal ? `, ${e.prepare.zeroSignal} we know nothing about` : "") +
+                (staleBy > 0 ? `. ${staleBy} more confirmed since; work out matches again to include them` : "")
+              : e.prepare?.error
+                ? `Could not work out matches: ${e.prepare.error}`
+                : `Matches get worked out automatically in ${Math.max(0, Math.round(e.hoursUntil - 48))}h (2 days before).`}
+            {e.previewEmailedAt ? ` · preview emailed ${fmtTime(e.previewEmailedAt)}` : ""}
+          </li>
+        )}
+        {(upcoming || e.send) && (
+          <li>
+            {send.kind === "sent"
+              ? `People-to-meet email: all ${e.send?.sent ?? 0} sent`
+              : send.kind === "sending"
+                ? `People-to-meet email: sending now, ${e.send?.sent ?? 0} out so far`
+                : send.kind === "stopped"
+                  ? `Emails stopped${send.by ? ` by ${send.by}` : ""}${send.at ? ` ${fmtTime(send.at)}` : ""}; nothing will send`
                   : send.kind === "scheduled"
-                    ? "default"
-                    : send.kind === "off"
-                      ? "outline"
-                      : "secondary"
-              }
-            >
-              {send.kind === "stopped"
-                ? "emails stopped"
-                : send.kind === "scheduled"
-                  ? "sends automatically"
-                  : send.kind === "off"
-                    ? "won't send automatically"
-                    : send.kind === "sending"
-                      ? `sending · ${e.send?.sent ?? 0}`
-                      : `sent ${e.send?.sent ?? 0}`}
-            </Badge>
-          )}
-        </div>
-      </div>
+                    ? "People-to-meet email sends 24h before the event"
+                    : "Emails are off for this event"}
+          </li>
+        )}
+        {(emailsPending || e.connect) && (
+          <li>
+            {e.connect?.error
+              ? `Connect email: ${e.connect.error}`
+              : e.connect?.completedAt
+                ? `Connect email sent to ${e.connect.sent} people${e.connect.failed ? `, ${e.connect.failed} failed` : ""}`
+                : e.connect
+                  ? `Connect email sending now, ${e.connect.sent ?? 0} out so far`
+                  : willSend
+                    ? e.directory?.enabled === false && e.directory.revokedAt
+                      ? "Connect email will not send: the directory is turned off"
+                      : "Connect email with the directory link goes out when the event ends"
+                    : "Connect email will not send while emails are off"}
+          </li>
+        )}
+      </ul>
 
-      <p className="mt-2 text-sm">
-        {e.counts?.approved ?? 0} confirmed ·{" "}
-        {e.counts?.invited ?? 0} invited · {e.counts?.declined ?? 0} declined
-        {e.counts?.checkedIn ? ` · ${e.counts.checkedIn} checked in` : ""}
-      </p>
-
-      {/* The registration questions ARE the matching signal, so surface them: an
-          event that asks a goals/expertise pair produces far better recommendations
-          than one that asks nothing. */}
-      {e.registrationQuestions?.length ? (
-        <p className="mt-1 text-xs text-muted-foreground">
-          Asks: {e.registrationQuestions.map((q) => q.label).filter(Boolean).join(" · ")}
-        </p>
-      ) : (
-        <p className="mt-1 text-xs text-muted-foreground">No registration questions, so no self-described signal.</p>
-      )}
-
-      {/* The blast timeline, stated plainly: prepare at T-48h, send at T-24h. */}
-      {upcoming && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          {e.prepare?.completedAt
-            ? `Matches worked out ${fmtTime(e.prepare.completedAt)} for ${e.prepare.recipients ?? 0} people` +
-              (e.prepare.zeroSignal ? ` · ${e.prepare.zeroSignal} we know nothing about` : "") +
-              // People keep confirming after the matches are computed. Without this
-              // the card reports a stale number as if it were current.
-              (staleBy > 0 ? ` · ${staleBy} more confirmed since, re-run to include them` : "")
-            : e.prepare?.error
-              ? `Could not work out matches: ${e.prepare.error}`
-              : `Matches get worked out automatically in ${Math.max(0, Math.round(e.hoursUntil - 48))}h (2 days before the event). Nothing to stop until then.`}
-          {e.previewEmailedAt ? ` · preview emailed ${fmtTime(e.previewEmailedAt)}` : ""}
-          {send.kind === "sent"
-            ? ` · all ${e.send?.sent ?? 0} emails sent`
-            : send.kind === "sending"
-              ? ` · sending now, ${e.send?.sent ?? 0} out so far`
-              : send.kind === "stopped"
-                ? ` · stopped${send.by ? ` by ${send.by}` : ""}${send.at ? ` ${fmtTime(send.at)}` : ""}, nothing will send`
-                : send.kind === "scheduled"
-                  ? " · sends 24h before the event"
-                  : " · will not send unless you turn on automatic sending"}
-        </p>
-      )}
-
-      {/* The connect email at event end: "Connect with fellow participants" + directory. */}
-      {(upcoming || e.connect) && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          {e.connect?.error
-            ? `Connect email: ${e.connect.error}`
-            : e.connect?.completedAt
-              ? `Connect email sent to ${e.connect.sent} people${e.connect.failed ? `, ${e.connect.failed} failed` : ""}`
-              : e.connect
-                ? `Connect email sending now, ${e.connect.sent ?? 0} out so far`
-                : send.kind === "scheduled" || send.kind === "sent" || send.kind === "sending"
-                  ? "Connect email with the directory link goes out when the event ends"
-                  : "Connect email will not send unless automatic sending is on"}
-        </p>
-      )}
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button variant={selected ? "default" : "outline"} size="sm" onClick={onSelect}>
-          {selected ? "Viewing guests" : "View guests"}
-        </Button>
-        <Button variant="outline" size="sm" onClick={onSyncGuests} disabled={busy}>
-          {busy ? "Syncing…" : "Sync registrations"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={acting !== null}
-          onClick={() =>
-            act("prepare", async () => {
-              const r = (await authFetch(`/api/events/${e.id}/prepare`, {
-                method: "POST",
-                body: JSON.stringify({ force: false }),
-              })) as { recipients?: number; zeroSignal?: number; done?: boolean; remaining?: number };
-              return `Matched ${r.recipients ?? 0} guests${r.zeroSignal ? `, ${r.zeroSignal} of whom we know nothing about` : ""}${
-                r.done ? "" : `, ${r.remaining} left for the next run`
-              }. Preview emailed to you.`;
-            })
-          }
-        >
-          {acting === "prepare" ? "Working out matches…" : "Work out the matches now"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={acting !== null}
-          onClick={() =>
-            act("connect-test", async () => {
-              await authFetch(`/api/events/${e.id}/connect-test`, { method: "POST" });
-              return "Connect email sent to your admin address, marked [test]. The directory link is now fixed.";
-            })
-          }
-        >
-          {acting === "connect-test" ? "Sending…" : "Send connect email to me"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={acting !== null || pending === 0}
-          onClick={() =>
-            act("enrich", async () => {
-              const r = (await authFetch("/api/events/enrich", {
-                method: "POST",
-                body: JSON.stringify({ eventId: e.id, limit: LOOKUP_BATCH }),
-              })) as { considered?: number; signalsBuilt?: number; confirmed?: number; photos?: number };
-              return `Looked up ${r.considered ?? 0} guests: ${r.confirmed ?? 0} LinkedIn profiles found, ${r.photos ?? 0} photos, ${r.signalsBuilt ?? 0} now matchable.`;
-            })
-          }
-        >
-          {acting === "enrich"
-            ? "Looking up…"
-            : pending === 0
-              ? "All profiles looked up"
-              : thisBatch < pending
-                ? `Look up ${thisBatch} of ${pending} profiles`
-                : `Look up ${pending} ${pending === 1 ? "profile" : "profiles"}`}
-        </Button>
-        {/* On-demand roster export (Name / Background / LinkedIn) for confirmed guests
-            + hosts, available any time so the admin can send it through Luma. */}
-        <Button variant="outline" size="sm" disabled={downloading} onClick={downloadParticipants}>
-          {downloading ? "Preparing…" : "Download participants"}
-        </Button>
-        <DirectoryControl eventId={e.id} api={authFetch} />
-        {/* ONE switch decides whether ~100 people get emailed. `willSend` is the true
-            on/off (armed AND not stopped). Turning off is a PAUSE that keeps the arm,
-            so a resume is a single click; turning on clears any pause and arms. Hidden
-            once the blast has finished. */}
-        {upcoming && !e.send?.completedAt && (
-          <Button
-            variant={willSend ? "outline" : e.cancelled ? "default" : "outline"}
-            size="sm"
-            disabled={acting !== null}
-            onClick={() =>
-              ask({
-                title: willSend ? "Stop these emails going out?" : "Turn on automatic sending?",
-                description: willSend
-                  ? `The ${e.prepare?.recipients ?? e.counts?.approved ?? 0} emails will NOT go out. You can resume any time before they send.`
-                  : `Every confirmed guest will be emailed automatically 24 hours before the event, unless you stop it first. ${e.counts?.approved ?? 0} people right now.`,
-                confirmLabel: willSend ? "Stop the emails" : e.cancelled ? "Resume sending" : "Turn on automatic sending",
-                danger: willSend,
-                run: async () => {
-                  await authFetch(`/api/events/${e.id}/cancel`, {
-                    method: "POST",
-                    // Off = pause only (keep the arm). On = clear the pause and arm.
-                    body: JSON.stringify(willSend ? { cancelled: true } : { cancelled: false, autoSend: true }),
-                  });
-                  reload();
-                },
-              })
-            }
-          >
-            {willSend
-              ? "Automatic sending: on"
-              : e.cancelled
-                ? "Resume automatic sending"
-                : "Automatic sending: off"}
+      <div className="mt-4 space-y-3 border-t pt-3">
+        <ControlRow label="Guests">
+          <Button variant={selected ? "default" : "outline"} size="sm" aria-pressed={selected} onClick={onSelect}>
+            {selected ? "Showing guests below" : "View guests"}
           </Button>
+          <Button variant="outline" size="sm" onClick={syncGuests} disabled={acting !== null}>
+            {acting === "sync" ? "Syncing…" : "Sync registrations"}
+          </Button>
+          {upcoming && (
+            <Button variant="outline" size="sm" disabled={acting !== null || pending === 0} onClick={lookup}>
+              {acting === "enrich"
+                ? "Looking up…"
+                : pending === 0
+                  ? "All profiles looked up"
+                  : thisBatch < pending
+                    ? `Look up ${thisBatch} of ${pending} profiles`
+                    : `Look up ${pending} ${pending === 1 ? "profile" : "profiles"}`}
+            </Button>
+          )}
+          <Button variant="outline" size="sm" disabled={acting !== null} onClick={downloadParticipants}>
+            {acting === "download" ? "Preparing…" : "Download participants"}
+          </Button>
+          {e.url && (
+            <a href={e.url} target="_blank" rel="noreferrer" className="text-sm text-primary underline underline-offset-4">
+              Open on Luma
+            </a>
+          )}
+        </ControlRow>
+
+        {(upcoming || emailsPending) && (
+          <ControlRow label="Emails">
+            {!e.send?.completedAt || emailsPending ? (
+              <Button
+                variant={willSend ? "outline" : "default"}
+                size="sm"
+                role="switch"
+                aria-checked={willSend}
+                disabled={acting !== null}
+                onClick={toggleSending}
+              >
+                {willSend ? "Stop emails for this event" : e.cancelled ? "Resume emails" : "Turn on automatic emails"}
+              </Button>
+            ) : null}
+            {upcoming && !e.send?.sent && (
+              <Button variant="outline" size="sm" disabled={acting !== null} onClick={prepare}>
+                {acting === "prepare" ? "Working out matches…" : e.prepare?.completedAt ? "Match new guests now" : "Work out matches now"}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" disabled={acting !== null} onClick={connectTest}>
+              {acting === "connect-test" ? "Sending…" : "Email me the connect email"}
+            </Button>
+          </ControlRow>
         )}
-        {e.url && (
-          <a
-            href={e.url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-          >
-            Luma page
-          </a>
-        )}
-        {e.guestsSyncedAt ? (
-          <span className="text-xs text-muted-foreground">registrations synced {fmtTime(e.guestsSyncedAt)}</span>
-        ) : (
-          <span className="text-xs text-muted-foreground">never synced</span>
-        )}
+
+        <ControlRow label="Directory">
+          <DirectoryControl eventId={e.id} initial={e.directory} api={authFetch} ask={ask} />
+        </ControlRow>
       </div>
-      {note && <p className="note mt-2 text-sm">{note}</p>}
+      {note && <p className="note mt-3 text-sm" role="status">{note}</p>}
+    </div>
+  );
+}
+
+function ControlRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[6rem_1fr] sm:items-start">
+      <p className="pt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">{children}</div>
     </div>
   );
 }
@@ -584,6 +572,9 @@ interface GuestRow {
   linkedinUrl?: string;
   linkedinSource?: string;
   linkedinCandidate?: { url: string; name?: string; headline?: string };
+  avatarUrl?: string;
+  photoSource?: ProfileView["photoSource"];
+  profile?: ProfileView;
   optOut: boolean;
   bouncedAt?: number;
   eventApprovedCount: number;
@@ -608,6 +599,7 @@ function GuestTable({ authFetch, eventId }: { authFetch: Fetcher; eventId: strin
   const [err, setErr] = useState<string | null>(null);
   const [onlyConfirmed, setOnlyConfirmed] = useState(true);
   const [open, setOpen] = useState<string | null>(null);
+  const [editing, setEditing] = useState<GuestRow | null>(null);
 
   useEffect(() => {
     setState(null);
@@ -625,6 +617,19 @@ function GuestTable({ authFetch, eventId }: { authFetch: Fetcher; eventId: strin
     ? state.guests.filter((g) => g.approvalStatus === "approved" || g.isHost)
     : state.guests;
 
+  // Apply an edit to the one row, so the table reflects what the server stored.
+  function applyEdit(id: string, next: { profile: ProfileView; linkedinCandidate?: Candidate }) {
+    setState((prev) => prev && {
+      ...prev,
+      guests: prev.guests.map((g) => g.id === id ? {
+        ...g,
+        profile: next.profile,
+        linkedinUrl: next.profile.linkedinUrl || undefined,
+        linkedinCandidate: next.profile.linkedinUrl ? undefined : next.linkedinCandidate ?? undefined,
+      } : g),
+    });
+  }
+
   return (
     <Section title="Registrations">
       {/* The honest headline: recommendation quality is capped by how many people
@@ -639,107 +644,121 @@ function GuestTable({ authFetch, eventId }: { authFetch: Fetcher; eventId: strin
       </p>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setOnlyConfirmed((v) => !v)}>
+        <Button variant="outline" size="sm" onClick={() => setOnlyConfirmed((v) => !v)}>
           {onlyConfirmed ? `Show all ${state.guests.length} registrations` : `Show only ${c.approved} confirmed`}
         </Button>
       </div>
 
-      <div className="orbit-card mt-3 overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-xs text-muted-foreground">
-              <th className="px-3 py-2 text-left font-medium">Guest</th>
-              <th className="px-3 py-2 text-left font-medium">Status</th>
-              <th className="px-3 py-2 text-left font-medium" title="What we can say about them: their own answers, an enriched LinkedIn, or nothing">
-                Signal
-              </th>
-              <th className="px-3 py-2 text-left font-medium">LinkedIn</th>
-              <th className="px-3 py-2 text-right font-medium" title="Events they have been approved for, all time">
-                Events
-              </th>
-              <th className="px-3 py-2 text-right font-medium">Registered</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((g) => (
-              // Two <tr> per guest (the row plus its expanded answers), so the key
-              // belongs on the Fragment, not on the rows.
-              <Fragment key={g.id}>
-                <tr
-                  onClick={() => setOpen(open === g.id ? null : g.id)}
-                  className="cursor-pointer border-b last:border-0 hover:bg-muted/50"
-                >
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-medium">{g.name || "(no name)"}</span>
-                      {g.isHost && <Badge variant="secondary">host</Badge>}
-                      {g.optOut && <Badge variant="destructive">opted out</Badge>}
-                      {g.bouncedAt ? <Badge variant="destructive">bounced</Badge> : null}
-                    </div>
-                    <span className="text-xs text-muted-foreground">{g.email}</span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <Badge variant={g.approvalStatus === "approved" ? "default" : "secondary"}>{g.approvalStatus}</Badge>
-                    {g.checkedInAt ? <span className="ml-1 text-xs text-muted-foreground">checked in</span> : null}
-                  </td>
-                  <td className="px-3 py-2">
-                    <Badge
-                      variant={
-                        g.signalTier === "answers" ? "default" : g.signalTier === "linkedin" ? "secondary" : "outline"
-                      }
-                    >
-                      {g.signalTier ?? "none"}
-                    </Badge>
-                  </td>
-                  <td className="px-3 py-2">
-                    {g.linkedinUrl ? (
-                      <a
-                        href={g.linkedinUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(ev) => ev.stopPropagation()}
-                        className="text-primary underline underline-offset-4"
-                      >
-                        profile
-                      </a>
-                    ) : g.linkedinCandidate ? (
-                      <span className="text-xs text-muted-foreground">guess pending</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Not available</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-right">{g.eventApprovedCount}</td>
-                  <td className="px-3 py-2 text-right text-muted-foreground">{fmtDate(g.registeredAt)}</td>
-                </tr>
-                {open === g.id && (
-                  <tr className="border-b bg-muted/30 last:border-0">
-                    <td colSpan={6} className="px-3 py-3">
-                      <RecsPanel authFetch={authFetch} eventId={eventId} guestId={g.id} guestName={g.name} />
-                      {g.headline && <p className="mt-4 text-sm font-medium">{g.headline}</p>}
-                      {g.answers.length ? (
-                        <ul className="mt-1 space-y-2">
-                          {g.answers.map((a) => (
-                            <li key={a.questionId || a.label}>
-                              <p className="text-xs text-muted-foreground">{a.label}</p>
-                              <p className="text-sm whitespace-pre-wrap">{a.answer}</p>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No registration answers. Recommendations for this person fall back to their LinkedIn, or to
-                          serendipity.
-                        </p>
-                      )}
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          {onlyConfirmed ? "No confirmed guests yet." : "No registrations yet."} Sync registrations on the event card to pull the latest from Luma.
+        </p>
+      ) : (
+        <div className="orbit-card mt-3 overflow-x-auto p-0">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-xs text-muted-foreground">
+                <th className="px-3 py-2 text-left font-medium">Guest</th>
+                <th className="px-3 py-2 text-left font-medium">Status</th>
+                <th className="px-3 py-2 text-left font-medium" title="What we can say about them: their own answers, an enriched LinkedIn, or nothing">Signal</th>
+                <th className="px-3 py-2 text-left font-medium">LinkedIn</th>
+                <th className="px-3 py-2 text-right font-medium" title="Events they have been approved for, all time">Events</th>
+                <th className="px-3 py-2 text-right font-medium">Registered</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((g) => (
+                // Two <tr> per guest (the row plus its expanded detail), so the key
+                // belongs on the Fragment, not on the rows.
+                <Fragment key={g.id}>
+                  <tr className="border-b last:border-0">
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <ProfileAvatar profile={g.profile} name={g.name} />
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            className="text-left font-medium underline decoration-border underline-offset-4"
+                            aria-expanded={open === g.id}
+                            onClick={() => setOpen(open === g.id ? null : g.id)}
+                          >
+                            {g.name || "(no name)"}
+                          </button>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {g.isHost && <Badge variant="secondary">host</Badge>}
+                            {g.optOut && <Badge variant="destructive">opted out</Badge>}
+                            {g.bouncedAt ? <Badge variant="destructive">bounced</Badge> : null}
+                            <span className="text-xs text-muted-foreground">{g.email}</span>
+                          </div>
+                        </div>
+                      </div>
                     </td>
+                    <td className="px-3 py-2">
+                      <Badge variant={g.approvalStatus === "approved" ? "default" : "secondary"}>{g.approvalStatus}</Badge>
+                      {g.checkedInAt ? <span className="ml-1 text-xs text-muted-foreground">checked in</span> : null}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge variant={g.signalTier === "answers" ? "default" : g.signalTier === "linkedin" ? "secondary" : "outline"}>
+                        {g.signalTier ?? "none"}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {g.linkedinUrl ? (
+                          <a href={g.linkedinUrl} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">profile</a>
+                        ) : g.linkedinCandidate ? (
+                          <a href={g.linkedinCandidate.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground underline underline-offset-4">guess to review</a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">none</span>
+                        )}
+                        <Button variant="outline" size="xs" onClick={() => setEditing(g)}>
+                          {g.linkedinCandidate && !g.linkedinUrl ? "Review" : "Edit"}
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-right">{g.eventApprovedCount}</td>
+                    <td className="px-3 py-2 text-right text-muted-foreground">{fmtDate(g.registeredAt)}</td>
                   </tr>
-                )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground">Click a row to read what they told you at registration.</p>
+                  {open === g.id && (
+                    <tr className="border-b bg-muted/30 last:border-0">
+                      <td colSpan={6} className="px-3 py-3">
+                        <RecsPanel authFetch={authFetch} eventId={eventId} guestId={g.id} guestName={g.name} confirmed={g.approvalStatus === "approved" || !!g.isHost} />
+                        {g.headline && <p className="mt-4 text-sm font-medium">{g.headline}</p>}
+                        {g.answers.length ? (
+                          <ul className="mt-1 space-y-2">
+                            {g.answers.map((a) => (
+                              <li key={a.questionId || a.label}>
+                                <p className="text-xs text-muted-foreground">{a.label}</p>
+                                <p className="text-sm whitespace-pre-wrap">{a.answer}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            No registration answers. Recommendations for this person fall back to their LinkedIn, or to serendipity.
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="mt-2 text-xs text-muted-foreground">Select a name to see their five recommendations and what they told you at registration.</p>
+      {editing && (
+        <ProfileEditor
+          contactId={editing.id}
+          name={editing.name}
+          profile={editing.profile}
+          candidate={editing.linkedinUrl ? null : editing.linkedinCandidate}
+          authFetch={authFetch}
+          onClose={() => setEditing(null)}
+          onSaved={(next) => applyEdit(editing.id, next)}
+        />
+      )}
     </Section>
   );
 }
@@ -765,11 +784,13 @@ function RecsPanel({
   eventId,
   guestId,
   guestName,
+  confirmed,
 }: {
   authFetch: Fetcher;
   eventId: string;
   guestId: string;
   guestName: string;
+  confirmed: boolean;
 }) {
   const [rec, setRec] = useState<{ people?: RecPerson[]; lineSource?: string; emailedAt?: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -806,7 +827,9 @@ function RecsPanel({
   if (!rec)
     return (
       <p className="text-sm text-muted-foreground">
-        No recommendations for {guestName} yet. Run Prepare now on the event above.
+        {confirmed
+          ? `No recommendations for ${guestName} yet. Use "Work out matches now" on the event card.`
+          : `${guestName} is not confirmed, so they get no recommendations.`}
       </p>
     );
 
@@ -860,10 +883,11 @@ interface ContactRow {
   email: string;
   eventApprovedCount?: number;
   eventCheckedInCount?: number;
-  linkedinUrl?: string;
   firstSeenAt?: number;
   emailOptOut?: boolean;
   emailBouncedAt?: number;
+  linkedinCandidate?: Candidate;
+  profile?: ProfileView;
 }
 
 function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => void }) {
@@ -876,6 +900,8 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
+  const [editing, setEditing] = useState<ContactRow | null>(null);
+  const [searched, setSearched] = useState("");
 
   const fetchPage = useCallback(
     async (opts: { q?: string; page?: number }) => {
@@ -891,6 +917,7 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
           pages: number;
         };
         setRows(r.contacts);
+        setSearched(opts.q ?? "");
         setTotal(r.total);
         setPage(r.page);
         setPages(r.pages);
@@ -903,28 +930,22 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
     [authFetch],
   );
 
-  // Update the row in place rather than refetching 200 rows for one flag.
+  // Update the row from the server's answer rather than guessing locally: a
+  // resubscribe, for instance, keeps a bounce, and the row must say so.
   async function act(id: string, action: "resubscribe" | "optout" | "clear-bounce") {
     setActing(id);
     setErr(null);
     try {
-      await authFetch(`/api/events/contact/${encodeURIComponent(id)}`, {
+      const r = (await authFetch(`/api/events/contact/${encodeURIComponent(id)}`, {
         method: "POST",
         body: JSON.stringify({ action }),
-      });
-      setRows((prev) =>
-        prev.map((r) =>
-          r.id === id
-            ? {
-                ...r,
-                emailOptOut: action === "optout",
-                emailBouncedAt: action === "optout" ? r.emailBouncedAt : undefined,
-              }
-            : r,
-        ),
-      );
+      })) as { contact: { emailOptOut: boolean; emailBouncedAt: number | null } };
+      setRows((prev) => prev.map((row) => row.id === id
+        ? { ...row, emailOptOut: r.contact.emailOptOut, emailBouncedAt: r.contact.emailBouncedAt ?? undefined }
+        : row));
     } catch (e) {
       setErr((e as Error).message);
+      throw e;
     } finally {
       setActing(null);
     }
@@ -937,7 +958,9 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
   return (
     <Section title="Subscribers">
       <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="roster-search" className="sr-only">Search subscribers</label>
         <Input
+          id="roster-search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && fetchPage({ q, page: 1 })}
@@ -985,28 +1008,33 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
             {rows.map((c) => (
               <tr key={c.id} className="border-b last:border-0 hover:bg-muted/50">
                 <td className="px-3 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-medium">{c.name || "(no name)"}</span>
-                    {c.emailOptOut && <Badge variant="destructive">opted out</Badge>}
-                    {!c.emailOptOut && c.emailBouncedAt ? <Badge variant="outline">bounced</Badge> : null}
+                  <div className="flex items-center gap-2">
+                    <ProfileAvatar profile={c.profile} name={c.name} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium">{c.name || "(no name)"}</span>
+                        {c.emailOptOut && <Badge variant="destructive">opted out</Badge>}
+                        {!c.emailOptOut && c.emailBouncedAt ? <Badge variant="outline">bounced</Badge> : null}
+                      </div>
+                      <span className="text-xs text-muted-foreground">{c.email}</span>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">{c.email}</span>
                 </td>
                 <td className="px-3 py-2 text-right">{c.eventApprovedCount ?? 0}</td>
                 <td className="px-3 py-2 text-right text-muted-foreground">{c.eventCheckedInCount ?? 0}</td>
                 <td className="px-3 py-2">
-                  {c.linkedinUrl ? (
-                    <a
-                      href={c.linkedinUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline underline-offset-4"
-                    >
-                      profile
-                    </a>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Not available</span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {c.profile?.linkedinUrl ? (
+                      <a href={c.profile.linkedinUrl} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-4">profile</a>
+                    ) : c.linkedinCandidate?.url ? (
+                      <span className="text-xs text-muted-foreground">guess to review</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">none</span>
+                    )}
+                    <Button variant="outline" size="xs" onClick={() => setEditing(c)}>
+                      {c.linkedinCandidate?.url && !c.profile?.linkedinUrl ? "Review" : "Edit"}
+                    </Button>
+                  </div>
                 </td>
                 <td className="px-3 py-2 text-right text-muted-foreground">{fmtDate(c.firstSeenAt)}</td>
                 <td className="px-3 py-2 text-right">
@@ -1056,7 +1084,7 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
                       onClick={() =>
                         ask({
                           title: `Remove ${c.name || c.email} from the list?`,
-                          description: "They will stop receiving pre-event emails, and stop being recommended to others.",
+                          description: "They will stop receiving the people-to-meet and connect emails, and stop being recommended to others.",
                           confirmLabel: "Remove",
                           danger: true,
                           run: () => act(c.id, "optout"),
@@ -1071,6 +1099,9 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
             ))}
           </tbody>
         </table>
+        {!busy && rows.length === 0 && (
+          <p className="px-3 py-4 text-sm text-muted-foreground">{searched ? `No subscribers match "${searched}".` : "No subscribers yet. Sync the calendar from Luma."}</p>
+        )}
       </div>
 
       <div className="mt-3 flex items-center gap-2">
@@ -1087,6 +1118,17 @@ function Roster({ authFetch, ask }: { authFetch: Fetcher; ask: (c: Confirm) => v
       <p className="mt-2 text-xs text-muted-foreground">
         Check-in counts come from Luma and only exist for events where guests were scanned at the door.
       </p>
+      {editing && (
+        <ProfileEditor
+          contactId={editing.id}
+          name={editing.name}
+          profile={editing.profile}
+          candidate={editing.profile?.linkedinUrl ? null : editing.linkedinCandidate}
+          authFetch={authFetch}
+          onClose={() => setEditing(null)}
+          onSaved={(next) => setRows((prev) => prev.map((row) => row.id === editing.id ? { ...row, profile: next.profile, linkedinCandidate: next.linkedinCandidate ?? undefined } : row))}
+        />
+      )}
     </Section>
   );
 }

@@ -16,7 +16,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ eventId
     return NextResponse.json({ error: "Slow down a moment." }, { status: 429 });
   }
   const { eventId } = await params;
-  const body = (await req.json().catch(() => ({}))) as { cancelled?: boolean; autoSend?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { cancelled?: unknown; autoSend?: unknown };
+  if (typeof body.cancelled !== "boolean" && typeof body.autoSend !== "boolean") {
+    return NextResponse.json({ error: "Nothing to change." }, { status: 400 });
+  }
+  // Both setters merge-write, so an unknown id would otherwise create a phantom event.
+  if (!(await getEvent(eventId))) return NextResponse.json({ error: "Unknown event." }, { status: 404 });
   const auth = await verifyRequest(req);
 
   if (typeof body.cancelled === "boolean") {

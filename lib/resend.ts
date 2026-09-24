@@ -222,6 +222,7 @@ ${clubHeader()}
 ${clubRows(p.people)}
 ${eventLink ? button(eventLink, "See the event details", COPPER) : ""}
 <p style="color:#444;font-size:14px">Not sure who to approach first? Start with whoever is standing alone.</p>
+<p style="color:#444;font-size:14px">Wrong photo or LinkedIn on your card? <a href="${BASE}/preferences" style="color:#444">Update your profile</a>.</p>
 ${
   unsubUrl
     ? `<p style="color:#888;font-size:13px;margin-top:8px">Don&apos;t want these before each event? <a href="${unsubUrl}" style="color:#888">Unsubscribe</a>.</p>`
@@ -293,7 +294,7 @@ ${clubHeader()}
 <p>Thanks for coming. Everyone who was at the event is in one private directory, with their background and LinkedIn, so you can follow up with the people you met and reach the ones you missed.</p>
 
 ${button(directory, "Connect with fellow participants", COPPER)}
-<p style="color:#444;font-size:14px">The link is private to this event&apos;s guests, so please don&apos;t share it publicly. Rather not be listed? <a href="${BASE}/preferences" style="color:#444">Update your preferences</a>.</p>
+<p style="color:#444;font-size:14px">The link is private to this event&apos;s guests, so please don&apos;t share it publicly. Wrong photo or LinkedIn, or rather not be listed? <a href="${BASE}/preferences" style="color:#444">Update your profile</a>.</p>
 ${
   unsubUrl
     ? `<p style="color:#888;font-size:13px;margin-top:8px">Don&apos;t want emails like this? <a href="${unsubUrl}" style="color:#888">Unsubscribe</a>.</p>`

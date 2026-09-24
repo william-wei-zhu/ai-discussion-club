@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getEvent, getEvents, getRecs, isArmed, prepareEvent, previewConnect, sendConnectBlast, sendEventBlast, syncEvents, syncEventGuests, willSendAutomatically } from "@/lib/club";
+import { bearerMatches } from "@/lib/cron-sync";
+import { getEvent, getEvents, getRecs, isArmed, prepareEvent, previewConnect, sendConnectBlast, sendEventBlast, syncEventGuests, willSendAutomatically } from "@/lib/club";
 import { CONNECT_WINDOW_MS, connectTiming, eventEndMs } from "@/lib/connect";
 import { lumaConfigured } from "@/lib/luma";
 import type { ClubEvent } from "@/lib/types";
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
   const auth = req.headers.get("authorization");
   // Fail CLOSED: a missing CRON_SECRET must not make this world-callable. It runs
   // matchmaking and can email every confirmed guest of an event.
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (!bearerMatches(auth, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (process.env.JOBS_ENABLED !== "true") {
@@ -137,22 +138,15 @@ export async function GET(req: Request) {
     }
 
     // Cheap idle path: Firestore only.
-    let events = await getEvents();
-    let upcoming = events
+    const events = await getEvents();
+    const upcoming = events
       .filter((e) => hoursOut(e, now) > 0 && hoursOut(e, now) <= HORIZON)
       .sort((a, b) => a.startAt - b.startAt);
 
-    // Nothing near, but the mirror may be stale (a newly created event). Refresh the
-    // event list once a day, off the hour the phases use.
+    // The event mirror is refreshed hourly by /api/cron/club-sync, so no extra
+    // Luma sync is needed here (a daily one used to live here before that existed).
     if (!upcoming.length) {
-      if (new Date(now).getUTCHours() === 7) {
-        await syncEvents();
-        events = await getEvents();
-        upcoming = events
-          .filter((e) => hoursOut(e, now) > 0 && hoursOut(e, now) <= HORIZON)
-          .sort((a, b) => a.startAt - b.startAt);
-      }
-      if (!upcoming.length && !recentlyEnded(events, now).length) {
+      if (!recentlyEnded(events, now).length) {
         return NextResponse.json({ ok: true, skipped: "nothing-within-horizon", ms: Date.now() - started });
       }
     }

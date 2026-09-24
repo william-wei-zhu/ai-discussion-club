@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { rateLimit, clientIp } from "@/lib/guard";
 import { getContacts } from "@/lib/club";
+import { profileView } from "@/lib/profile-rules";
 
 // GET /api/events/contacts?q=&tag=&limit=&page= — the club CRM roster, paged.
 //
@@ -22,5 +23,21 @@ export async function GET(req: Request) {
     limit: Number.isFinite(limitRaw) ? limitRaw : 20,
     page: Number.isFinite(pageRaw) ? pageRaw : 1,
   });
-  return NextResponse.json(res);
+  // Only what the roster shows. Full docs carried the recommendation-history maps
+  // for every row, which the UI never used.
+  return NextResponse.json({
+    ...res,
+    contacts: res.contacts.map((c) => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      eventApprovedCount: c.eventApprovedCount,
+      eventCheckedInCount: c.eventCheckedInCount,
+      firstSeenAt: c.firstSeenAt,
+      emailOptOut: !!c.emailOptOut,
+      emailBouncedAt: c.emailBouncedAt,
+      linkedinCandidate: c.linkedinCandidate,
+      profile: profileView(c),
+    })),
+  });
 }

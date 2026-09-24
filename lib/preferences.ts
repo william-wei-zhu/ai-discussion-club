@@ -101,3 +101,24 @@ export async function memberEvents(contactId: string, email: string) {
     return [{ id: event.id, name: String(data.name || "Event"), startAt: Number(data.startAt || 0) }];
   });
 }
+
+/** Profile edits (LinkedIn or photo) per contact per UTC day. Durable and fails closed. */
+export async function chargeProfileChange(contactId: string, dailyCap = 10): Promise<boolean> {
+  const now = Date.now();
+  const ref = db().collection("preferenceSendLimits").doc(`${utcDay(now)}_profile_${preferenceHash(contactId)}`);
+  try {
+    return await db().runTransaction(async (tx) => {
+      const count = Number((await tx.get(ref)).data()?.count || 0);
+      if (count >= dailyCap) return false;
+      tx.set(ref, { count: count + 1, day: utcDay(now), kind: "profile-change" }, { merge: true });
+      return true;
+    });
+  } catch {
+    return false;
+  }
+}
+
+export async function endPreferenceSession(raw: string | undefined): Promise<void> {
+  if (!raw || !validPreferenceToken(raw)) return;
+  await db().collection("preferenceSessions").doc(preferenceHash(raw)).delete().catch(() => {});
+}

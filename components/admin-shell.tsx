@@ -14,13 +14,10 @@ import {
 } from "@/components/ui/dialog";
 
 /**
- * The pieces every password-gated console shares: the two-factor gate, the
- * authenticated fetch, the load hook, the stat/section primitives and the one
- * confirm dialog.
- *
- * Extracted verbatim from components/admin-client.tsx when /events became a
- * second gated console, so there is exactly ONE password key, ONE 401-drops-the-
- * gate behaviour and ONE confirm dialog rather than two copies drifting apart.
+ * The pieces the password-gated /admin console uses: the two-factor gate, the
+ * authenticated fetch, the load hook, the section primitive and the one confirm
+ * dialog, kept together so there is exactly ONE password key, ONE 401-drops-the-
+ * gate behaviour and ONE confirm dialog.
  */
 
 // Where the admin password lives for the session (sent as a header on every
@@ -52,12 +49,14 @@ export function useAuthFetch(user: GateUser, onDenied: () => void): Fetcher {
       if (!user) throw new Error("Sign in first.");
       const idToken = await user.getIdToken();
       const password = sessionStorage.getItem(PW_KEY) ?? "";
+      // A FormData body (photo upload) must set its own multipart boundary.
+      const isForm = typeof FormData !== "undefined" && init?.body instanceof FormData;
       const res = await fetch(path, {
         ...init,
         cache: "no-store",
         headers: {
           ...(init?.headers ?? {}),
-          "Content-Type": "application/json",
+          ...(isForm ? {} : { "Content-Type": "application/json" }),
           Authorization: `Bearer ${idToken}`,
           "x-admin-password": password,
         },
@@ -185,29 +184,34 @@ export function ConfirmDialog({
   onClose: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function run() {
     if (!confirm) return;
     setBusy(true);
+    setErr(null);
     try {
       await confirm.run();
       onClose();
-    } catch {
-      // The child surfaces its own error; just keep the dialog open.
+    } catch (e) {
+      // Keep the dialog open AND say why: a silent failure here once meant a
+      // "Stop the emails" click that did nothing without telling anyone.
+      setErr((e as Error).message || "That did not work. Try again.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Dialog open={!!confirm} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={!!confirm} onOpenChange={(o) => { if (!o) { setErr(null); onClose(); } }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{confirm?.title}</DialogTitle>
           <DialogDescription>{confirm?.description}</DialogDescription>
         </DialogHeader>
+        {err && <p role="alert" className="text-sm font-medium text-destructive">{err}</p>}
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={busy}>
+          <Button variant="outline" onClick={() => { setErr(null); onClose(); }} disabled={busy}>
             Cancel
           </Button>
           <Button variant={confirm?.danger ? "destructive" : "default"} onClick={run} disabled={busy}>
@@ -219,79 +223,29 @@ export function ConfirmDialog({
   );
 }
 
+/**
+ * Load once, then refresh in the background. `loading` is only true for the very
+ * first load: a reload keeps the current data on screen (so cards stay mounted and
+ * their result messages survive) and flips `refreshing` instead.
+ */
 export function useLoad<T>(load: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const run = useCallback(() => {
-    setLoading(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const run = useCallback((background = false) => {
+    if (background) setRefreshing(true);
+    else setLoading(true);
     setErr(null);
     load()
       .then(setData)
       .catch((e) => setErr((e as Error).message))
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); setRefreshing(false); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => run(), [run]);
-  return { data, err, loading, reload: run };
-}
-
-export function Stat({
-  label,
-  value,
-  sub,
-  spark,
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  spark?: number[];
-}) {
-  return (
-    <div className="orbit-card p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 font-heading text-2xl font-bold">{value}</p>
-      {spark && spark.length > 1 && <Sparkline data={spark} className="mt-1.5 text-primary" />}
-      {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
-    </div>
-  );
-}
-
-// A tiny dependency-free trend line (inline SVG). Scales the series to a small box
-// and stretches to the card width; stroke inherits currentColor.
-export function Sparkline({ data, className }: { data: number[]; className?: string }) {
-  if (!data || data.length < 2) return null;
-  const w = 100;
-  const h = 24;
-  const pad = 2;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const pts = data
-    .map((v, i) => {
-      const x = pad + (i / (data.length - 1)) * (w - pad * 2);
-      const y = h - pad - ((v - min) / range) * (h - pad * 2);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      className={`h-6 w-full ${className ?? ""}`}
-      preserveAspectRatio="none"
-      aria-hidden
-    >
-      <polyline
-        points={pts}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
+  const reload = useCallback(() => run(true), [run]);
+  return { data, err, loading, refreshing, reload };
 }
 
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {

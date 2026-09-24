@@ -1,60 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
-type Status = { enabled: boolean; url?: string; version?: number; createdAt?: number; rotatedAt?: number };
+import type { Confirm, Fetcher } from "@/components/admin-shell";
+import type { DirectoryStatus } from "@/lib/directory";
 
 // The event's private directory link. The link is FIXED: it is shown every time
 // and only changes when the admin replaces it (or revokes it). A legacy link made
 // before links were stored recoverably has no url and must be replaced once.
-export function DirectoryControl({ eventId, api }: {
+// Status arrives with the event list, so a card never fetches it on its own.
+export function DirectoryControl({ eventId, initial, api, ask }: {
   eventId: string;
-  api: (path: string, init?: RequestInit) => Promise<unknown>;
+  initial?: DirectoryStatus;
+  api: Fetcher;
+  ask: (c: Confirm) => void;
 }) {
-  const [status, setStatus] = useState<Status | null>(null);
+  const [status, setStatus] = useState<DirectoryStatus>(initial ?? { enabled: false });
   const [busy, setBusy] = useState(false);
-  const [confirmReplace, setConfirmReplace] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const path = `/api/events/${encodeURIComponent(eventId)}/directory`;
 
-  useEffect(() => {
-    let current = true;
-    api(path).then((value) => { if (current) setStatus(value as Status); }).catch(() => { if (current) setMessage("Directory status could not be loaded."); });
-    return () => { current = false; };
-  }, [api, path]);
-
   async function create(action: "generate" | "rotate") {
-    setBusy(true); setMessage(""); setConfirmReplace(false);
+    setBusy(true); setMessage(null);
     try {
-      const result = await api(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) }) as Status;
-      setStatus(result);
-      setMessage(action === "rotate" ? "New link created. The old link no longer works." : "Directory link created.");
-    } catch { setMessage("The directory link could not be created."); }
+      setStatus(await api(path, { method: "POST", body: JSON.stringify({ action }) }) as DirectoryStatus);
+      setMessage({ text: action === "rotate" ? "New link created. The old link no longer works." : "Directory link created." });
+    } catch (e) { setMessage({ text: (e as Error).message, error: true }); throw e; }
     finally { setBusy(false); }
   }
 
   async function revoke() {
-    setBusy(true); setMessage(""); setConfirmReplace(false);
-    try { const result = await api(path, { method: "PATCH" }) as Status; setStatus(result); setMessage("The directory link is now revoked."); }
-    catch { setMessage("The directory link could not be revoked."); }
+    setBusy(true); setMessage(null);
+    try { setStatus(await api(path, { method: "PATCH" }) as DirectoryStatus); setMessage({ text: "The directory is now off." }); }
+    catch (e) { setMessage({ text: (e as Error).message, error: true }); throw e; }
     finally { setBusy(false); }
   }
 
-  const replace = confirmReplace
-    ? <>
-        <span className="text-sm">The current link will stop working.</span>
-        <Button variant="destructive" disabled={busy} onClick={() => create("rotate")}>Replace link</Button>
-        <Button variant="outline" disabled={busy} onClick={() => setConfirmReplace(false)}>Keep current link</Button>
-      </>
-    : <Button variant="outline" disabled={busy} onClick={() => setConfirmReplace(true)}>{status?.url ? "Replace link" : "Replace to make this link permanent"}</Button>;
-
-  return <div className="flex flex-wrap items-center gap-2" aria-live="polite">
-    {!status ? <span className="text-sm">Loading directory…</span> : status.enabled ? <>
-      {replace}
-      <Button variant="destructive" disabled={busy} onClick={revoke}>Revoke directory</Button>
-    </> : <Button variant="outline" disabled={busy} onClick={() => create("generate")}>Create directory link</Button>}
-    {status?.url ? <div className="basis-full rounded-lg border border-border bg-background p-3"><label className="block text-sm font-medium" htmlFor={`directory-${eventId}`}>Directory link</label><div className="mt-2 flex flex-wrap gap-2"><input id={`directory-${eventId}`} className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" readOnly value={status.url} onFocus={(e) => e.currentTarget.select()} /><Button onClick={() => navigator.clipboard.writeText(status.url ?? "").then(() => setMessage("Link copied."))}>Copy</Button></div></div> : null}
-    {message ? <p className="basis-full text-sm">{message}</p> : null}
+  return <div className="space-y-2">
+    <div className="flex flex-wrap items-center gap-2">
+      {status.enabled ? <>
+        <Button variant="outline" size="sm" disabled={busy} onClick={() => ask({
+          title: status.url ? "Replace the directory link?" : "Replace the legacy link?",
+          description: status.url
+            ? "The current link stops working immediately, including in emails already sent. Only do this if the link leaked."
+            : "This link was made before links were stored, so it cannot be shown. Replacing it creates a permanent link; the old one stops working.",
+          confirmLabel: "Replace link",
+          danger: !!status.url,
+          run: () => create("rotate"),
+        })}>{status.url ? "Replace link" : "Replace to make permanent"}</Button>
+        <Button variant="outline" size="sm" disabled={busy} onClick={() => ask({
+          title: "Turn off this event's directory?",
+          description: "The link stops working for everyone, and the connect email for this event will not send while the directory is off.",
+          confirmLabel: "Turn off directory",
+          danger: true,
+          run: revoke,
+        })}>Turn off directory</Button>
+      </> : <Button variant="outline" size="sm" disabled={busy} onClick={() => { void create("generate").catch(() => undefined); }}>
+        {status.revokedAt ? "Turn directory back on (new link)" : "Create directory link"}
+      </Button>}
+    </div>
+    {status.url ? <div className="flex flex-wrap gap-2">
+      <label className="sr-only" htmlFor={`directory-${eventId}`}>Directory link</label>
+      <input id={`directory-${eventId}`} className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm" readOnly value={status.url} onFocus={(e) => e.currentTarget.select()} />
+      <Button size="sm" onClick={() => navigator.clipboard.writeText(status.url ?? "").then(() => setMessage({ text: "Link copied." }))}>Copy</Button>
+    </div> : null}
+    {message ? <p role={message.error ? "alert" : "status"} className={`text-sm ${message.error ? "text-destructive" : ""}`}>{message.text}</p> : null}
   </div>;
 }

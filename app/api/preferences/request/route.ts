@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   try {
     const sent = await new Resend(key).emails.send({
       from, to: email, subject: "Manage your AI Discussion Club preferences",
-      html: `<div style="font-family:Arial,sans-serif;color:#271d31;line-height:1.6;max-width:560px;margin:auto"><h1 style="font-family:Georgia,serif;font-weight:500">Your preferences</h1><p>Use this private link within one hour to choose club email and event directory settings.</p><p><a href="${href}" style="display:inline-block;background:#6441a5;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none">Manage preferences</a></p><p>If you did not request this, you can ignore this email.</p></div>`,
+      html: `<div style="font-family:Arial,sans-serif;color:#271d31;line-height:1.6;max-width:560px;margin:auto"><h1 style="font-family:Georgia,serif;font-weight:500">Your profile and preferences</h1><p>Use this private link within one hour to update your photo and LinkedIn, and to choose club email and event directory settings.</p><p><a href="${href}" style="display:inline-block;background:#6441a5;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none">Open my settings</a></p><p>If you did not request this, you can ignore this email.</p></div>`,
     });
     if (sent.error || !sent.data?.id) throw new Error("Resend did not accept the message.");
   } catch {
