@@ -15,3 +15,5 @@ Verification:
 - Visual review caught original banner text clipping into mobile skyline and off-center invitation logo. Both corrected. Mobile event detail puts registration panel before the full content/cover.
 
 Scaling: public query reads all public events and filters/paginates in memory, reasonable for current 22 records. Move pagination/filtering into indexed queries when the catalog reaches hundreds of events. No broad client cache: request-time status avoids stale upcoming dates. Snapshot update is an explicit editorial/build operation and must continue to use only source-confirmed public records.
+
+2026-09-24: Added /workshops (card index) and the Claude workshop deck; Workshops is in the header (hidden under 700px like About) and footer, plus the sitemap. Verified at 1440x900 CSS (one viewport tall, no footer), dark theme, and 390px (stacked, no horizontal overflow).

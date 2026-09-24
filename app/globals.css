@@ -91,7 +91,7 @@
 
 @media(max-width:900px){.spotlight{grid-template-columns:minmax(0,280px) 1fr;gap:30px}.photo-montage{grid-template-rows:auto 230px}}
 @media(max-width:700px){
-.site-header{height:84px}.brand img{width:52px;height:52px}.site-header nav{gap:16px}.site-header nav>a[href="/about"]{display:none}.header-cta{padding:8px 16px;font-size:.84rem}
+.site-header{height:84px}.brand img{width:52px;height:52px}.site-header nav{gap:16px}.site-header nav>a:is([href="/about"],[href="/workshops"]){display:none}.header-cta{padding:8px 16px;font-size:.84rem}
 .hero-copy{padding-top:14px}.hero-sky{margin-top:-6px}.hero-sky img{height:auto;aspect-ratio:2715/500;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%);mask-image:linear-gradient(180deg,transparent 0,#000 18%)}
 .spotlight-section{margin-top:20px}.spotlight{grid-template-columns:1fr;gap:22px;padding:16px;border-radius:22px}.spotlight-body{padding:0 6px 8px}.spotlight-body h2{font-size:2.1rem}
 .spotlight-body .button-row{flex-direction:column;align-items:stretch}
@@ -117,3 +117,30 @@
 /* Header with Events, Demo, Join us and Settings: keep the logo whole on the narrowest phones. */
 .brand{flex-shrink:0}
 @media(max-width:400px){.site-header nav{gap:10px}.header-cta{padding:8px 12px}}
+
+/* Workshops (/workshops and each deck under it). The deck is ported from the
+   Feedback Lab workshop: each step is one landscape slide sized to the viewport
+   at lg+, so a room can follow along without anyone scrolling. Type follows the
+   screen height there (dvh); below lg the sizes stay fixed and steps stack.
+   Several rules restate sizes here because the site's element styles (h1/h2,
+   p, img, a, button) are unlayered and so beat Tailwind utilities. */
+:root{--tint:color-mix(in srgb,var(--accent) 12%,var(--background))}
+@theme inline{--color-tint:var(--tint)}
+.workshop-card-blurb{font-size:.9rem;line-height:1.55}
+.ws-slide{--ws-title:2.3rem;--ws-body:1.05rem;--ws-small:.9rem;--ws-gap:1.25rem}
+@media(min-width:64rem){.ws-slide{--ws-title:clamp(2rem,calc(.6rem + 4.2dvh),4rem);--ws-body:clamp(1rem,calc(.6rem + 1.05dvh),1.45rem);--ws-small:clamp(.82rem,calc(.5rem + .85dvh),1.08rem);--ws-gap:clamp(.75rem,1.7dvh,1.75rem)}}
+.ws-slide .ws-title{font-size:var(--ws-title);line-height:1.02}
+.ws-slide p{max-width:none}
+.ws-slide .ws-img{height:auto;max-height:55vh}
+@media(min-width:64rem){.ws-slide .ws-img{height:100%;max-height:none}}
+.ws-slide .ws-link{font-size:var(--ws-small);border-width:2px;border-color:var(--accent)}
+.ws-slide .ws-link:hover{background:var(--accent);color:var(--accent-foreground);filter:none}
+.ws-slide .ws-inline-link{min-height:38px;padding:6px 16px;font-size:var(--ws-small)}
+.ws-nav .button{min-height:56px;padding:12px 34px;font-size:var(--ws-body)}
+@media(max-width:639px){.ws-nav .button{width:100%}}
+/* A slide fills everything under the header, so the footer would sit just past
+   the fold and add a scrollbar. Hide it while a deck is up (desktop only; on
+   phones the steps stack and scroll normally). */
+@media(min-width:64rem){body.ws-deck .site-footer{display:none}}
+/* Projected: the stage owns the whole screen, with no site chrome to subtract. */
+.ws-slide:fullscreen{width:100%;max-width:none;height:100dvh;padding-inline:5vw;background:var(--background)}
