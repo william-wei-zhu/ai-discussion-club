@@ -408,3 +408,65 @@ ${clubRows(p.sample.people)}
   });
   return assertResendSuccess(result);
 }
+
+// --- Demo night applications ---------------------------------------------------
+
+export interface DemoApplicationEmail {
+  name: string;
+  email: string;
+  description: string;
+  projectUrl: string;
+  linkedinUrl: string;
+  company: string;
+}
+
+function demoSummary(a: DemoApplicationEmail): string {
+  const link = (url: string, label: string) => {
+    const href = safeHref(url);
+    return href ? `<a href="${href}" style="color:${COPPER}">${esc(label)}</a>` : esc(url);
+  };
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:16px;font-size:15px">
+<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top">Name</td><td style="padding:4px 0">${esc(a.name)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top">Email</td><td style="padding:4px 0">${esc(a.email)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top">Company</td><td style="padding:4px 0">${a.company ? esc(a.company) : "Not given"}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top">Project</td><td style="padding:4px 0">${link(a.projectUrl, a.projectUrl)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;color:#555;vertical-align:top">LinkedIn</td><td style="padding:4px 0">${link(a.linkedinUrl, a.linkedinUrl)}</td></tr>
+</table>
+<p style="margin-top:16px;white-space:pre-wrap">${esc(a.description)}</p>`;
+}
+
+/** "We received your application", sent to the applicant. */
+export async function sendDemoApplicationConfirmation(a: DemoApplicationEmail) {
+  const inner = `
+${clubHeader()}
+<p style="margin-top:24px">Hi ${esc(a.name.split(" ")[0] || "there")},</p>
+<p>Thanks for applying to demo at an AI Discussion Club demo night. We read every application and will reach out by email if your project is a fit for an upcoming event.</p>
+<p style="margin-top:20px;color:#555">Here is what you sent us:</p>
+${demoSummary(a)}
+<p style="margin-top:20px;color:#444;font-size:14px">Need to change something? Reply to this email.</p>`;
+  const result = await resend().emails.send({
+    from: CLUB_FROM,
+    to: [a.email],
+    replyTo: [ADMIN_EMAIL],
+    subject: "We received your demo night application",
+    html: shell(inner, `<a href="${CLUB_HOME}" style="color:#444">AI Discussion Club</a> · you are getting this because you applied to demo.`),
+  });
+  return assertResendSuccess(result);
+}
+
+/** New-application notice to the organizer. Reply goes straight to the applicant. */
+export async function sendDemoApplicationAdminNotice(a: DemoApplicationEmail) {
+  const to = process.env.DEMO_NOTIFY_EMAIL?.trim() || ADMIN_EMAIL;
+  const inner = `
+<p style="margin:0;font-weight:700;font-size:19px">New demo night application</p>
+${demoSummary(a)}
+${button(`${BASE}/admin`, "Review in the admin console", COPPER)}`;
+  const result = await resend().emails.send({
+    from: CLUB_FROM,
+    to: [to],
+    replyTo: [a.email],
+    subject: `[AI Discussion Club] Demo application from ${a.name.slice(0, 60)}`,
+    html: shell(inner, "AI Discussion Club · admin notice"),
+  });
+  return assertResendSuccess(result);
+}

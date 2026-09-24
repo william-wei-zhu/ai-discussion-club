@@ -1,15 +1,12 @@
 import { createHash, randomBytes } from "crypto";
 import { db } from "@/lib/firebase-admin";
+import { normalizeEmail } from "@/lib/email";
 
 export const PREFERENCE_COOKIE = "club_preferences";
 export const LINK_TTL_MS = 60 * 60 * 1000;
 export const SESSION_TTL_MS = 30 * 60 * 1000;
 
-export function normalizeEmail(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  const email = raw.trim().toLowerCase();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254 ? email : null;
-}
+export { normalizeEmail };
 
 export function preferenceToken(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");

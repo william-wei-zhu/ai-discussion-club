@@ -113,3 +113,7 @@
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:700px){.profile-preview{flex-direction:column;align-items:flex-start}}
 .event-cover-link{display:block;overflow:hidden;border-radius:18px}.event-cover-link img{transition:transform .6s cubic-bezier(.2,.7,.2,1)}.event-cover-link:hover img{transform:scale(1.02)}
+
+/* Header with Events, Demo, Join us and Settings: keep the logo whole on the narrowest phones. */
+.brand{flex-shrink:0}
+@media(max-width:400px){.site-header nav{gap:10px}.header-cta{padding:8px 12px}}
