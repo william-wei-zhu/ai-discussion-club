@@ -36,6 +36,19 @@ export function trustedPhotoUrl(raw: unknown): string | undefined {
   return undefined;
 }
 
+// A LinkedIn profile photo as the enrichment stores it: either the app's own GCS
+// copy served by /api/img/avatars/..., or a direct https licdn.com image URL.
+export function trustedLinkedInPhoto(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  if (/^\/api\/img\/avatars\/[A-Za-z0-9._\/-]+$/.test(raw) && !raw.includes("..")) return raw;
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase();
+    if (url.protocol === "https:" && (host === "licdn.com" || host.endsWith(".licdn.com"))) return url.toString();
+  } catch {}
+  return undefined;
+}
+
 export function trustedLinkedIn(raw: unknown, confidence: unknown): string | undefined {
   if (confidence !== "given" && confidence !== "high") return undefined;
   if (typeof raw !== "string") return undefined;
@@ -67,13 +80,15 @@ export function toDirectoryCard(input: {
   const name = String(contact.name || guest.name || "").trim();
   if (!name) return null;
   const background = typeof contact.headline === "string" ? contact.headline.trim().slice(0, 180) : "";
+  const linkedinUrl = trustedLinkedIn(contact.linkedinUrl, contact.linkedinConfidence);
+  // Prefer the LinkedIn photo, but only when the LinkedIn profile itself is trusted
+  // to be this person (same gate as the link). Luma's avatar is the fallback.
+  const photoUrl = (linkedinUrl && trustedLinkedInPhoto(contact.linkedinPhoto)) || trustedPhotoUrl(contact.avatarUrl);
   return {
     name,
     ...(background ? { background } : {}),
-    ...(trustedLinkedIn(contact.linkedinUrl, contact.linkedinConfidence)
-      ? { linkedinUrl: trustedLinkedIn(contact.linkedinUrl, contact.linkedinConfidence) }
-      : {}),
-    ...(trustedPhotoUrl(contact.avatarUrl) ? { photoUrl: trustedPhotoUrl(contact.avatarUrl) } : {}),
+    ...(linkedinUrl ? { linkedinUrl } : {}),
+    ...(photoUrl ? { photoUrl } : {}),
     isHost: guest.isHost === true,
   };
 }
@@ -103,7 +118,7 @@ export async function directoryForToken(token: string): Promise<{
   for (let i = 0; i < guests.length; i += 300) {
     const refs = guests.slice(i, i + 300).map((g) => db().collection("clubContacts").doc(g.id));
     if (!refs.length) continue;
-    const snaps = await db().getAll(...refs, { fieldMask: ["name", "headline", "linkedinUrl", "linkedinConfidence", "avatarUrl"] });
+    const snaps = await db().getAll(...refs, { fieldMask: ["name", "headline", "linkedinUrl", "linkedinConfidence", "linkedinPhoto", "avatarUrl"] });
     for (const snap of snaps) if (snap.exists) contacts.set(snap.id, snap.data() as Record<string, unknown>);
   }
   const members = guests.flatMap((snap) => {
