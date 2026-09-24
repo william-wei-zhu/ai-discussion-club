@@ -42,12 +42,15 @@ export function trustedLinkedIn(raw: unknown, confidence: unknown): string | und
   return normalizeLinkedInUrl(raw) ?? undefined;
 }
 
+// Opt-out: every going guest and every host is listed unless they turned the
+// directory off for this event in /preferences (a directoryConsent doc with
+// enabled === false). No consent doc means listed.
 export function visibleDirectoryMember(input: {
   approvalStatus?: unknown;
   isHost?: unknown;
-  consentEnabled?: unknown;
+  optedOut?: unknown;
 }): boolean {
-  return input.consentEnabled === true &&
+  return input.optedOut !== true &&
     (input.approvalStatus === "approved" || input.isHost === true);
 }
 
@@ -59,7 +62,7 @@ export function toDirectoryCard(input: {
   if (!visibleDirectoryMember({
     approvalStatus: guest.approvalStatus,
     isHost: guest.isHost,
-    consentEnabled: guest.consentEnabled,
+    optedOut: guest.optedOut,
   })) return null;
   const name = String(contact.name || guest.name || "").trim();
   if (!name) return null;
@@ -85,14 +88,17 @@ export async function directoryForToken(token: string): Promise<{
   if (access.empty || access.docs[0].data().enabled !== true) return null;
   const eventId = access.docs[0].id;
   const eventRef = db().collection("clubEvents").doc(eventId);
-  const [eventSnap, guestSnap, consentSnap] = await Promise.all([
+  const [eventSnap, guestSnap, optOutSnap] = await Promise.all([
     eventRef.get(),
     eventRef.collection("guests").get(),
-    eventRef.collection("directoryConsent").where("enabled", "==", true).get(),
+    eventRef.collection("directoryConsent").where("enabled", "==", false).get(),
   ]);
   if (!eventSnap.exists) return null;
-  const consent = new Set(consentSnap.docs.map((doc) => doc.id));
-  const guests = guestSnap.docs.filter((doc) => consent.has(doc.id));
+  const optedOut = new Set(optOutSnap.docs.map((doc) => doc.id));
+  const guests = guestSnap.docs.filter((doc) => {
+    const g = doc.data();
+    return !optedOut.has(doc.id) && (g.approvalStatus === "approved" || g.isHost === true);
+  });
   const contacts = new Map<string, Record<string, unknown>>();
   for (let i = 0; i < guests.length; i += 300) {
     const refs = guests.slice(i, i + 300).map((g) => db().collection("clubContacts").doc(g.id));
@@ -102,7 +108,7 @@ export async function directoryForToken(token: string): Promise<{
   }
   const members = guests.flatMap((snap) => {
     const card = toDirectoryCard({
-      guest: { ...snap.data(), consentEnabled: true },
+      guest: { ...snap.data(), optedOut: false },
       contact: contacts.get(snap.id),
     });
     return card ? [card] : [];

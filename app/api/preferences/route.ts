@@ -19,10 +19,11 @@ export async function GET() {
   ]);
   const refs = events.map((event) => db().collection("clubEvents").doc(event.id).collection("directoryConsent").doc(auth.contactId));
   const consents = refs.length ? await db().getAll(...refs) : [];
-  const enabled = new Map(consents.map((snap) => [snap.ref.parent.parent?.id, snap.data()?.enabled === true]));
+  // Opt-out model: listed unless they explicitly turned it off.
+  const enabled = new Map(consents.map((snap) => [snap.ref.parent.parent?.id, snap.data()?.enabled !== false]));
   return json({
     emailOptOut: contact.data()?.emailOptOut === true,
-    events: events.map((event) => ({ ...event, directoryEnabled: enabled.get(event.id) === true })),
+    events: events.map((event) => ({ ...event, directoryEnabled: enabled.get(event.id) !== false })),
   });
 }
 

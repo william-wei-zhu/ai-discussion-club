@@ -19,7 +19,7 @@ export default async function DirectoryPage({ params, searchParams }: {
   const page = Number.isInteger(requested) ? Math.min(Math.max(requested, 1), pages) : 1;
   const visible = result.members.slice((page - 1) * DIRECTORY_PAGE_SIZE, page * DIRECTORY_PAGE_SIZE);
   return <div className="wrap page-content">
-    <div className="page-heading"><p>Private event directory</p><h1>{result.event.name}</h1><p>Shared only with people who have this private link. Every person here chose to take part.</p></div>
+    <div className="page-heading"><p>Private event directory</p><h1>{result.event.name}</h1><p>Shared only with people who have this private link. Everyone going to this event is listed unless they chose to hide.</p></div>
     {visible.length ? <div className="grid gap-4 md:grid-cols-2">{visible.map((member, index) => <article className="flex items-start gap-4 rounded-2xl border border-border bg-secondary p-5" key={`${member.name}-${index}`}>
       {/* A direct trusted-CDN image avoids turning the app's optimizer into a private avatar proxy. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}

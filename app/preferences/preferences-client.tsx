@@ -47,7 +47,7 @@ export function PreferencesClient() {
 
   if (preferences) return <div aria-live="polite">
     <section className="settings-section"><h2>Club email</h2><p>Turn off event recommendations and club updates sent to your email.</p><label className="flex min-h-12 items-center gap-3"><input type="checkbox" checked={preferences.emailOptOut} disabled={busy} onChange={(event) => update({ emailOptOut: event.target.checked })} /><span>Do not send me club email</span></label></section>
-    <section className="settings-section"><h2>Private event directories</h2><p>When you opt in, anyone who has the event’s private link can see your name, profile background, trusted profile photo, LinkedIn link, and whether you are a host. Your email and registration answers are never shown.</p>
+    <section className="settings-section"><h2>Private event directories</h2><p>If you are going to an event, you appear in its private directory unless you turn it off here. Anyone who has the event’s private link can see your name, profile background, trusted profile photo, LinkedIn link, and whether you are a host. Your email and registration answers are never shown.</p>
       {preferences.events.length ? <div className="grid gap-3">{preferences.events.map((event) => <label className="flex min-h-14 items-center justify-between gap-4 rounded-xl border border-border bg-secondary p-4" key={event.id}><span>{event.name}</span><input type="checkbox" checked={event.directoryEnabled} disabled={busy} onChange={(input) => update({ directory: { eventId: event.id, enabled: input.target.checked } })} /></label>)}</div> : <p>You do not have an eligible event directory yet.</p>}
     </section>{message ? <p role="status">{message}</p> : null}
   </div>;

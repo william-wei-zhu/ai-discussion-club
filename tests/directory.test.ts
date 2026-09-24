@@ -12,12 +12,13 @@ test("directory tokens are random URL-safe values stored by hash", () => {
   assert.equal(isDirectoryToken("short"), false);
 });
 
-test("directory visibility requires explicit consent and approved or host membership", () => {
-  assert.equal(visibleDirectoryMember({ consentEnabled: true, approvalStatus: "approved" }), true);
-  assert.equal(visibleDirectoryMember({ consentEnabled: true, approvalStatus: "invited", isHost: true }), true);
-  assert.equal(visibleDirectoryMember({ consentEnabled: false, approvalStatus: "approved" }), false);
-  assert.equal(visibleDirectoryMember({ approvalStatus: "approved" }), false);
-  assert.equal(visibleDirectoryMember({ consentEnabled: true, approvalStatus: "invited" }), false);
+test("directory lists going guests and hosts unless they opted out", () => {
+  assert.equal(visibleDirectoryMember({ approvalStatus: "approved" }), true);
+  assert.equal(visibleDirectoryMember({ approvalStatus: "invited", isHost: true }), true);
+  assert.equal(visibleDirectoryMember({ optedOut: true, approvalStatus: "approved" }), false);
+  assert.equal(visibleDirectoryMember({ optedOut: true, approvalStatus: "host", isHost: true }), false);
+  assert.equal(visibleDirectoryMember({ approvalStatus: "invited" }), false);
+  assert.equal(visibleDirectoryMember({ approvalStatus: "declined" }), false);
 });
 
 test("directory allowlists profile links and photos", () => {
@@ -30,7 +31,7 @@ test("directory allowlists profile links and photos", () => {
 
 test("directory DTO exposes only public card fields", () => {
   const card = toDirectoryCard({
-    guest: { name: "Ada", email: "private@example.com", answers: ["secret"], approvalStatus: "approved", consentEnabled: true },
+    guest: { name: "Ada", email: "private@example.com", answers: ["secret"], approvalStatus: "approved" },
     contact: { name: "Ada Lovelace", headline: "Builds careful systems", email: "private@example.com", linkedinUrl: "linkedin.com/in/ada-l", linkedinConfidence: "high", avatarUrl: "/api/img/private" },
   });
   assert.deepEqual(card, { name: "Ada Lovelace", background: "Builds careful systems", linkedinUrl: "https://www.linkedin.com/in/ada-l", isHost: false });
