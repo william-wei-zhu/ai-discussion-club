@@ -261,7 +261,9 @@ export interface ExtractedProfile {
 // Where a contact's LinkedIn URL came from, and how much we trust it. Only
 // "given" and "high" ever render a link in an email: putting the wrong person's
 // profile in front of 98 strangers is the one mistake with no recovery.
-export type LinkedInSource = "registration" | "club_json" | "exa_search" | "admin";
+// "self" = typed by the person on /preferences; "self" and "admin" are locked
+// (isLinkedInLocked): registration sync and enrichment never overwrite them.
+export type LinkedInSource = "registration" | "club_json" | "exa_search" | "admin" | "self";
 export type LinkedInConfidence = "given" | "high" | "low";
 
 // How much we know about a person, which decides whether their why-line can be
@@ -294,6 +296,14 @@ export interface ClubContact {
   // media.licdn.com URL is signed and expires, so it is copied into our own bucket
   // rather than hotlinked into an email that people open days later.
   linkedinPhoto?: string;
+  linkedinUpdatedAt?: number;
+  linkedinUpdatedBy?: "self" | "admin";
+  // A photo the person (or an admin) uploaded: re-encoded WebP at
+  // /api/img/avatars/user-<id>/... It beats every other photo (profilePhoto) and
+  // enrichment never writes it, unlike linkedinPhoto and the hourly Luma avatarUrl.
+  photoUrl?: string;
+  photoSource?: "self" | "admin";
+  photoUpdatedAt?: number;
   headline?: string;
   signalTier?: SignalTier;
   emailOptOut?: boolean;
@@ -343,6 +353,7 @@ export interface ClubExaCache {
   confidence: LinkedInConfidence;
   searchQuery?: string;
   rejected?: "name-mismatch" | "no-content" | "ambiguous" | "not-found";
+  rejectedBy?: "admin"; // an admin rejected this guess; not re-offered until the cache ages out
 }
 
 export interface ClubEventCounts {

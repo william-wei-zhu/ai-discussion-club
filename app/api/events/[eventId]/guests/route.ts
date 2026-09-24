@@ -4,6 +4,7 @@ import { rateLimit, clientIp } from "@/lib/guard";
 import { getEvent, getEventGuests, CONTACTS } from "@/lib/club";
 import { db } from "@/lib/firebase-admin";
 import type { ClubContact } from "@/lib/types";
+import { profilePhoto, trustedLinkedInUrl } from "@/lib/profile-rules";
 
 // GET /api/events/[eventId]/guests — one event's registrations, joined to the CRM
 // contact for the LinkedIn state, plus the coverage totals that tell the admin at a
@@ -34,6 +35,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ eventId:
         "name",
         "tags",
         "avatarUrl",
+        "photoUrl",
+        "linkedinPhoto",
         "headline",
         "linkedinUrl",
         "linkedinSource",
@@ -51,12 +54,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ eventId:
 
   const rows = guests.map((g) => {
     const c = contacts.get(g.id);
-    const trustedLinkedIn =
-      c?.linkedinUrl && c.linkedinConfidence !== "low" ? c.linkedinUrl : undefined;
+    const trustedLinkedIn = c ? trustedLinkedInUrl(c) : undefined;
+    const photo = c ? profilePhoto(c) : undefined;
     return {
       ...g,
       tags: c?.tags ?? [],
-      avatarUrl: c?.avatarUrl,
+      // The same photo the directory and emails will show, and where it came from.
+      avatarUrl: photo?.url,
+      photoSource: photo?.source,
       headline: c?.headline,
       // Only a trusted URL is presented as the person's LinkedIn; a low-confidence
       // Exa hit stays in `linkedinCandidate` for the Confirm/Reject buttons.

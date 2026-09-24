@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { clubUnsubscribeToken } from "@/lib/unsubscribe";
 import { siteUrl } from "@/lib/site";
+import { linkedInPhoto, lumaPhoto, storedPhoto } from "@/lib/profile-rules";
 
 let client: Resend | null = null;
 
@@ -74,8 +75,10 @@ export function assertResendSuccess<T extends {
 // Absolute-ise an avatar for email. Stored photos are /api/img/... paths (served by
 // the public, immutable-cached proxy); an already-absolute https URL passes through.
 function emailImage(src?: string): string | null {
-  if (!src) return null;
-  return safeHref(src.startsWith("/") ? `${siteUrl}${src}` : src);
+  // Same allowlist as the directory: our stored copy, Luma's CDN, or LinkedIn's.
+  const ok = storedPhoto(src) ?? lumaPhoto(src) ?? linkedInPhoto(src);
+  if (!ok) return null;
+  return safeHref(ok.startsWith("/") ? `${siteUrl}${ok}` : ok);
 }
 
 /**

@@ -37,6 +37,14 @@ export function uploadAvatar(uid: string, file: { type: string; bytes: Buffer })
   return uploadImage("avatars", uid, file);
 }
 
+// Remove a replaced avatar. Takes the stored /api/img/avatars/... path; anything
+// else is ignored, and a missing object is not an error.
+export async function deleteStoredImage(path: string | undefined): Promise<void> {
+  const key = path?.startsWith("/api/img/") ? path.slice("/api/img/".length) : "";
+  if (!/^avatars\/[A-Za-z0-9._-]+\/[A-Za-z0-9-]+\.(jpg|png|webp|gif)$/.test(key)) return;
+  await uploadBucket().file(key).delete({ ignoreNotFound: true }).catch(() => {});
+}
+
 // Only import images from LinkedIn's media CDN (the source of onboarding avatar
 // guesses via Exa og:image). A tight host allowlist keeps this from being an
 // SSRF vector when the URL originates from a request body.

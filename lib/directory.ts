@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "crypto";
 import { db } from "@/lib/firebase-admin";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
+import { profilePhoto } from "@/lib/profile-rules";
 import { siteUrl } from "@/lib/site";
 import { secret as serverSecret } from "@/lib/unsubscribe";
 
@@ -158,9 +159,9 @@ export function toDirectoryCard(input: {
   if (!name) return null;
   const background = typeof contact.headline === "string" ? contact.headline.trim().slice(0, 180) : "";
   const linkedinUrl = trustedLinkedIn(contact.linkedinUrl, contact.linkedinConfidence);
-  // Prefer the LinkedIn photo, but only when the LinkedIn profile itself is trusted
-  // to be this person (same gate as the link). Luma's avatar is the fallback.
-  const photoUrl = (linkedinUrl && trustedLinkedInPhoto(contact.linkedinPhoto)) || trustedPhotoUrl(contact.avatarUrl);
+  // Uploaded photo first, then the LinkedIn photo only when that LinkedIn is
+  // trusted to be this person, then Luma (profilePhoto, shared with the emails).
+  const photoUrl = profilePhoto(contact)?.url;
   return {
     name,
     ...(background ? { background } : {}),
@@ -195,7 +196,7 @@ export async function directoryForToken(token: string): Promise<{
   for (let i = 0; i < guests.length; i += 300) {
     const refs = guests.slice(i, i + 300).map((g) => db().collection("clubContacts").doc(g.id));
     if (!refs.length) continue;
-    const snaps = await db().getAll(...refs, { fieldMask: ["name", "headline", "linkedinUrl", "linkedinConfidence", "linkedinPhoto", "avatarUrl"] });
+    const snaps = await db().getAll(...refs, { fieldMask: ["name", "headline", "linkedinUrl", "linkedinConfidence", "linkedinPhoto", "avatarUrl", "photoUrl"] });
     for (const snap of snaps) if (snap.exists) contacts.set(snap.id, snap.data() as Record<string, unknown>);
   }
   const members = guests.flatMap((snap) => {

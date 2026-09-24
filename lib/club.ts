@@ -16,6 +16,7 @@
  */
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "@/lib/firebase-admin";
+import { cacheMatchesProfile, isTrustedLinkedIn, profilePhoto, shouldPromoteRegistrationUrl, trustedLinkedInUrl } from "@/lib/profile-rules";
 import {
   listCalendarPeople,
   listEvents,
@@ -227,10 +228,10 @@ export async function syncEventGuests(eventApiId: string): Promise<SyncSummary> 
 
   const contactSnap = await db()
     .collection(CONTACTS)
-    .select("linkedinUrl", "linkedinConfidence", "email")
+    .select("linkedinUrl", "linkedinConfidence", "linkedinSource", "linkedinPhoto", "email")
     .get();
   const known = new Map(
-    contactSnap.docs.map((d) => [d.id, d.data() as Pick<ClubContact, "linkedinUrl" | "linkedinConfidence" | "email">]),
+    contactSnap.docs.map((d) => [d.id, d.data() as Pick<ClubContact, "linkedinUrl" | "linkedinConfidence" | "linkedinSource" | "linkedinPhoto" | "email">]),
   );
 
   const writer = db().bulkWriter();
@@ -250,7 +251,7 @@ export async function syncEventGuests(eventApiId: string): Promise<SyncSummary> 
     const answers = substantiveAnswers(g);
     const li = linkedinFromAnswers(g);
     const contact = known.get(id);
-    const trusted = !!(contact?.linkedinUrl && contact.linkedinConfidence !== "low") || !!li;
+    const trusted = (!!contact && isTrustedLinkedIn(contact)) || !!li;
 
     const doc: ClubGuest = {
       id,
@@ -290,14 +291,24 @@ export async function syncEventGuests(eventApiId: string): Promise<SyncSummary> 
       known.set(id, { email: guestEmail(g) });
     }
 
-    // Promote a self-typed LinkedIn URL. Never overwrite an equally-or-more
-    // trusted value (given/admin), so an admin correction always wins.
-    if (li && contact?.linkedinConfidence !== "given" && contact?.linkedinUrl !== li) {
+    // Promote a URL typed into the registration form. It refreshes an older
+    // registration or Exa value, but never one the person set on /preferences or an
+    // admin set (locked). A changed URL also drops what was derived from the old
+    // profile, so the old person's photo and text cannot follow the new link.
+    if (shouldPromoteRegistrationUrl(contact, li) && li) {
+      const changed = !!contact?.linkedinUrl && contact.linkedinUrl !== li;
       writer.set(
         db().collection(CONTACTS).doc(id),
-        { linkedinUrl: li, linkedinSource: "registration", linkedinConfidence: "given" },
+        {
+          linkedinUrl: li,
+          linkedinSource: "registration",
+          linkedinConfidence: "given",
+          ...(changed ? { linkedinPhoto: FieldValue.delete(), linkedinCandidate: FieldValue.delete(), headline: FieldValue.delete() } : {}),
+        },
         { merge: true },
       );
+      if (changed) writer.delete(db().collection(CONTACTS).doc(id).collection("signal").doc("exa"));
+      if (contact) Object.assign(contact, { linkedinUrl: li, linkedinSource: "registration", linkedinConfidence: "given" });
       promoted++;
     }
   }
@@ -457,7 +468,7 @@ export interface ParticipantRow {
  */
 export function buildParticipantRows(
   guests: ClubGuest[],
-  contactsById: Map<string, Pick<ClubContact, "name" | "headline" | "linkedinUrl" | "linkedinConfidence">>,
+  contactsById: Map<string, Pick<ClubContact, "name" | "headline" | "linkedinUrl" | "linkedinConfidence" | "linkedinSource">>,
 ): ParticipantRow[] {
   return guests
     .filter((g) => g.approvalStatus === "approved" || g.isHost)
@@ -468,7 +479,7 @@ export function buildParticipantRows(
         .map((a) => a.answer.trim())
         .filter(Boolean)
         .join(" · ");
-      const trusted = c?.linkedinUrl && c.linkedinConfidence !== "low" ? c.linkedinUrl : "";
+      const trusted = (c && trustedLinkedInUrl(c)) || "";
       return {
         name: (c?.name || g.name || "").trim(),
         background: headline || fromAnswers,
@@ -574,7 +585,7 @@ export async function getSummary(): Promise<ClubSummary> {
   for (const d of contactSnap.docs) {
     const c = d.data() as ClubContact;
     for (const t of c.tags ?? []) tags[t] = (tags[t] ?? 0) + 1;
-    if (c.linkedinUrl && c.linkedinConfidence !== "low") withLinkedIn++;
+    if (isTrustedLinkedIn(c)) withLinkedIn++;
     if (c.emailOptOut) optedOut++;
     if ((c.lastSyncedAt ?? 0) > lastSyncedAt) lastSyncedAt = c.lastSyncedAt ?? 0;
   }
@@ -723,7 +734,10 @@ async function enrichLinkedIn(
   s: EnrichSummary,
 ): Promise<{ url?: string; confidence: LinkedInConfidence; headline?: string; text?: string } | null> {
   const cacheRef = db().collection(CONTACTS).doc(contact.id).collection("signal").doc("exa");
-  const cached = (await cacheRef.get()).data() as ClubExaCache | undefined;
+  const stored = (await cacheRef.get()).data() as ClubExaCache | undefined;
+  // A cache written for a DIFFERENT profile than the contact now has (they or an
+  // admin corrected it) describes someone else: ignore it and fetch the right one.
+  const cached = stored && contact.linkedinUrl && stored.url && !cacheMatchesProfile(stored.url, contact.linkedinUrl) ? undefined : stored;
   // Reuse the cache until it ages out. This is the whole point of caching per
   // contact rather than per event: a returning regular costs nothing.
   if (cached && isCacheFresh(cached.fetchedAt)) {
@@ -746,7 +760,7 @@ async function enrichLinkedIn(
   // things were missing without this: the profile photo, and the profile TEXT,
   // which is why guests with a known LinkedIn but no registration answers were
   // still landing in the zero-signal bucket.
-  if (contact.linkedinUrl && contact.linkedinConfidence !== "low") {
+  if (isTrustedLinkedIn(contact)) {
     if (cached) s.refreshed = (s.refreshed ?? 0) + 1; // aged out, paying again
     if (!(await spendBudget("club_exa", DAILY_EXA_CAP))) {
       s.budgetExhausted = true;
@@ -755,7 +769,7 @@ async function enrichLinkedIn(
     s.exaCalls++;
     let raw;
     try {
-      raw = await fetchLinkedInProfile(contact.linkedinUrl);
+      raw = await fetchLinkedInProfile(contact.linkedinUrl as string);
     } catch {
       s.errors++;
       return null;
@@ -916,8 +930,8 @@ export async function setManualProfile(contactId: string, text: string, by: stri
     enteredAt: Date.now(),
     enteredBy: by,
   });
-  // The URL itself was already theirs; this only raises what we know about them.
-  await ref.set({ linkedinSource: "admin" }, { merge: true });
+  // Deliberately leaves linkedinSource alone: pasting profile text says nothing
+  // about where the URL came from, and "admin" now means an admin-set (locked) URL.
 }
 
 export async function getManualProfile(contactId: string): Promise<string | undefined> {
@@ -991,9 +1005,9 @@ async function buildSignal(contact: ClubContact, eventIds: string[], s: EnrichSu
   const signalRef = contactRef.collection("signal").doc("current");
 
   let profileText: string | undefined;
-  if (contact.linkedinUrl && contact.linkedinConfidence !== "low") {
+  if (isTrustedLinkedIn(contact)) {
     const exa = (await contactRef.collection("signal").doc("exa").get()).data() as ClubExaCache | undefined;
-    if (exa?.text && exa.confidence !== "low") profileText = exa.text;
+    if (exa?.text && exa.confidence !== "low" && cacheMatchesProfile(exa.url, contact.linkedinUrl)) profileText = exa.text;
   }
   // No URL-confidence gate on the manual text: a human pasted it deliberately, so
   // the wrong-person risk that gate exists for does not apply.
@@ -1064,7 +1078,7 @@ async function buildSignal(contact: ClubContact, eventIds: string[], s: EnrichSu
   };
   await signalRef.set(signal);
   await contactRef.set(
-    { signalTier: tier, headline: extracted.headline || contact.headline || undefined },
+    stripUndefined({ signalTier: tier, headline: extracted.headline || contact.headline || undefined }),
     { merge: true },
   );
   s.signalsBuilt++;
@@ -1225,7 +1239,7 @@ async function loadSignals(ids: string[]): Promise<Map<string, ClubGuestSignal &
       const c = { ...(cs.data() as ClubContact), id: cs.id };
       const sig = signals[j]?.data() as ClubSignal | undefined;
       // Confidence gate: an unconfirmed profile contributes NEITHER a link nor text.
-      const trusted = c.linkedinUrl && c.linkedinConfidence !== "low" ? c.linkedinUrl : undefined;
+      const trusted = trustedLinkedInUrl(c);
       // Prefer the LinkedIn photo when we trust the profile is theirs: it is the
       // picture the person chose to be recognised by professionally, and the Luma
       // avatar is very often a generated default. Luma is the fallback only.
@@ -1233,7 +1247,8 @@ async function loadSignals(ids: string[]): Promise<Map<string, ClubGuestSignal &
         id: c.id,
         name: c.name,
         headline: c.headline,
-        avatarUrl: (trusted && c.linkedinPhoto) || c.avatarUrl,
+        // One precedence everywhere: uploaded photo, trusted LinkedIn photo, Luma.
+        avatarUrl: profilePhoto(c)?.url,
         linkedinUrl: trusted,
         asks: sig?.asks ?? [],
         offers: sig?.offers ?? [],
