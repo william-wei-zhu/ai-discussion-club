@@ -25,7 +25,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
     <div className="page-heading"><p className="kicker">{past ? 'Past event' : relativeWhen(event, now)}</p><h1>{event.name}</h1></div>
     <div className="event-detail-grid">
       <div className="event-detail-main">
-        {event.coverUrl && <Image className="event-cover" src={event.coverUrl} alt="" width={900} height={900} priority sizes="(max-width: 700px) 92vw, 60vw" />}
+        {event.coverUrl && <a className="event-cover-link" href={event.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${event.name} on Luma`}><Image className="event-cover" src={event.coverUrl} alt="" width={900} height={900} priority sizes="(max-width: 700px) 92vw, 60vw" /></a>}
         {recap.length > 0 && <section className="prose"><h2>From the conversation</h2>{recap.map((p, i) => <p key={i}>{p}</p>)}</section>}
         {photos.length > 0 && <div className="event-photos">{photos.map((src, i) => <Image key={src} src={src} alt={`Photo ${i + 1} from ${event.name}`} width={900} height={650} unoptimized/>)}</div>}
         {description.length > 0 ? <section className="prose">{recap.length > 0 && <h2>About the event</h2>}{description.map((p, i) => <p key={i}>{p}</p>)}</section> : <p className="prose">The full agenda, speakers and any updates live on the event’s Luma page.</p>}
