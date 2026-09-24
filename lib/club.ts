@@ -48,9 +48,10 @@ import type {
 export const CONTACTS = "clubContacts";
 export const EVENTS = "clubEvents";
 
-// Arm the T-24h auto-send for newly synced events. Ships false so the very first
-// blast is a deliberate button press; flip to true for the steady state.
-const AUTOSEND_DEFAULT = process.env.CLUB_AUTOSEND_DEFAULT === "true";
+// Arm the T-24h auto-send for newly synced events. On by default (steady state since
+// 2026-09-24): every new event sends unless the admin disarms or pauses it. Set
+// CLUB_AUTOSEND_DEFAULT=false to go back to arming each event by hand.
+const AUTOSEND_DEFAULT = process.env.CLUB_AUTOSEND_DEFAULT !== "false";
 
 export interface SyncSummary {
   events?: number;
@@ -111,7 +112,15 @@ export async function syncEvents(): Promise<SyncSummary> {
     if (isNew) created++;
     writer.set(
       db().collection(EVENTS).doc(e.api_id),
-      isNew ? { ...doc, autoSend: AUTOSEND_DEFAULT, counts: emptyCounts() } : doc,
+      isNew
+        ? {
+            ...doc,
+            autoSend: AUTOSEND_DEFAULT,
+            // Same audit trail setAutoSend leaves, so a default-armed event is traceable.
+            ...(AUTOSEND_DEFAULT ? { autoSendArmedAt: now, autoSendArmedBy: "default" } : {}),
+            counts: emptyCounts(),
+          }
+        : doc,
       { merge: true },
     );
   }

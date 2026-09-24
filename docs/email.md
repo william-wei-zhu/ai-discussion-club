@@ -10,7 +10,7 @@ Use new LUMA_API_KEY, EXA_API_KEY, RESEND_API_KEY, PostHog project keys, and ind
 
 Create the sender domain in Resend and install its exact DNS verification records in authoritative DNS (and Vercel's prepared zone if propagation is pending). Existing inbound MX records must be preserved. Restrict the new sending API key to the verified domain where supported. Configure a signed webhook for bounces/complaints before broad sends.
 
-Set EMAIL_SENDING_ENABLED=true only after owner-only test delivery, unsubscribe verification, historical preference reconciliation, old-sender pause, and historical unsubscribe compatibility are complete. JOBS_ENABLED is a separate gate. New events are disarmed until the owner enables them. Never enable attendee sending in branch previews.
+Set EMAIL_SENDING_ENABLED=true only after owner-only test delivery, unsubscribe verification, historical preference reconciliation, old-sender pause, and historical unsubscribe compatibility are complete. JOBS_ENABLED is a separate gate. New events synced from Luma are armed for the T-24h send by default (`CLUB_AUTOSEND_DEFAULT`, on unless set to `false`); the owner can disarm or pause any event in admin. Events imported by the migration stay disarmed until armed by hand. Never enable attendee sending in branch previews.
 
 ## Missing integrations
 
