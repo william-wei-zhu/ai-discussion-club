@@ -7,7 +7,7 @@ export const communityPhotos = [
   '/photos/community-02.jpg', '/photos/community-08.jpg', '/photos/community-05.jpg',
   '/photos/community-01.jpg', '/photos/community-03.jpg', '/photos/community-04.jpg',
   '/photos/community-06.jpg', '/photos/community-07.jpg', '/photos/community-09.jpg',
-  '/photos/community-10.jpg', '/photos/community-11.jpg', '/photos/community-12.jpg',
+  '/photos/community-10.jpg', '/photos/community-11.jpg',
   '/photos/community-13.jpg', '/photos/community-14.jpg',
 ];
 
