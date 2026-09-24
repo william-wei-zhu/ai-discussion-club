@@ -48,6 +48,7 @@ export interface LumaEvent {
   timezone?: string; // IANA, e.g. "America/New_York"
   url?: string;
   cover_url?: string;
+  description_md?: string;
   geo_address_json?: {
     full_address?: string;
     address?: string;

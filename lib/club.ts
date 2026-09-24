@@ -78,6 +78,8 @@ function toClubEvent(e: LumaEvent, now: number): Omit<ClubEvent, "counts"> {
     timezone: e.timezone,
     url: e.url,
     coverUrl: e.cover_url,
+    // Public event pages show this; Luma remains the source of truth.
+    description: e.description_md?.trim() || undefined,
     address: geo?.full_address ?? geo?.address ?? geo?.city_state ?? undefined,
     requireApproval: e.require_approval,
     visibility: e.visibility,

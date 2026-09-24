@@ -363,6 +363,7 @@ export interface ClubEvent {
   timezone?: string;
   url?: string;
   coverUrl?: string;
+  description?: string; // Luma description_md, shown on the public event page
   address?: string;
   requireApproval?: boolean;
   visibility?: string;
