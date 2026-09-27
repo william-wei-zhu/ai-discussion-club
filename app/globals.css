@@ -155,3 +155,20 @@
 .gallery-host{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:500;overflow-wrap:anywhere}
 .gallery-meta{margin-top:auto;padding-top:8px;font-size:.8rem}
 @media(max-width:700px){.ws-submit{padding:18px}.gallery-list{grid-template-columns:1fr}}
+
+/* Private event directory (/g/[token]): name search and numbered pagination. */
+.directory-search{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:28px}
+.directory-search input{flex:1 1 280px;min-width:0;min-height:52px;padding:10px 20px;border:1px solid var(--line);border-radius:999px;background:var(--background);color:var(--foreground);font:inherit;font-size:1rem}
+.directory-search input:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-color:var(--accent)}
+.directory-search-note{margin:-12px 0 20px;font-size:.9rem;color:var(--muted-foreground)}
+.directory-pagination{display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:44px;font-size:.9rem}
+.directory-pager{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px}
+.pager-step{min-height:56px;padding:14px 32px;font-size:1rem;font-weight:600;box-shadow:0 10px 24px -14px rgba(58,28,98,.7)}
+.pager-step[aria-disabled=true]{background:var(--surface);color:var(--muted-foreground);border-color:var(--line);box-shadow:none;cursor:not-allowed;opacity:.7}
+.pager-step[aria-disabled=true]:hover{filter:none}
+.pager-numbers{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0;padding:0;list-style:none}
+.pager-number{display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:48px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--background);color:var(--accent);font-weight:600;text-decoration:none}
+a.pager-number:hover{background:var(--surface);border-color:var(--accent)}
+.pager-number[aria-current=page]{background:var(--accent);border-color:var(--accent);color:var(--accent-foreground)}
+.pager-gap{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:48px;color:var(--muted-foreground)}
+@media(max-width:700px){.directory-search .button{flex:1 1 auto}.directory-pager{width:100%}.pager-numbers{order:-1;width:100%}.pager-step{flex:1 1 0;padding-inline:16px}}

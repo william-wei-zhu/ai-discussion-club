@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { decryptToken, encryptToken, hashToken, isDirectoryToken, randomUrlToken, toDirectoryCard, trustedLinkedIn, trustedLinkedInPhoto, trustedPhotoUrl, visibleDirectoryMember } from "../lib/directory";
+import { decryptToken, directoryPageList, encryptToken, hashToken, isDirectoryToken, randomUrlToken, searchDirectory, toDirectoryCard, trustedLinkedIn, trustedLinkedInPhoto, trustedPhotoUrl, visibleDirectoryMember } from "../lib/directory";
 
 test("directory tokens are random URL-safe values stored by hash", () => {
   const a = randomUrlToken();
@@ -64,4 +64,22 @@ test("fixed directory links round-trip through encryption, and a wrong key fails
   assert.equal(decryptToken(undefined, "secret-one"), null);
   // Fresh IV every time: the same token never encrypts to the same string.
   assert.notEqual(encryptToken(token, "secret-one"), enc);
+});
+
+test("directory search matches every word of a name, ignoring case and accents", () => {
+  const people = [{ name: "José Álvarez" }, { name: "Mary Jo Lee" }, { name: "Joseph Park" }];
+  assert.deepEqual(searchDirectory(people, "  ").map((p) => p.name), ["José Álvarez", "Mary Jo Lee", "Joseph Park"]);
+  assert.deepEqual(searchDirectory(people, "jose").map((p) => p.name), ["José Álvarez", "Joseph Park"]);
+  assert.deepEqual(searchDirectory(people, "ALVAREZ jos").map((p) => p.name), ["José Álvarez"]);
+  assert.deepEqual(searchDirectory(people, "lee mary").map((p) => p.name), ["Mary Jo Lee"]);
+  assert.deepEqual(searchDirectory(people, "zzz"), []);
+});
+
+test("directory page list keeps first, last and neighbours with gaps", () => {
+  assert.deepEqual(directoryPageList(1, 1), [1]);
+  assert.deepEqual(directoryPageList(1, 5), [1, 2, 3, 4, 5]);
+  assert.deepEqual(directoryPageList(1, 10), [1, 2, 3, 4, "gap", 10]);
+  assert.deepEqual(directoryPageList(10, 10), [1, "gap", 7, 8, 9, 10]);
+  assert.deepEqual(directoryPageList(5, 10), [1, "gap", 4, 5, 6, "gap", 10]);
+  assert.deepEqual(directoryPageList(4, 10), [1, 2, 3, 4, 5, "gap", 10]);
 });

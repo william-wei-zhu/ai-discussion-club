@@ -243,3 +243,36 @@ export async function directoryForToken(token: string): Promise<{
   const event = eventSnap.data() ?? {};
   return { event: { name: String(event.name || "AI Discussion Club event"), ...(typeof event.startAt === "number" ? { startAt: event.startAt } : {}) }, members };
 }
+
+// --- Directory page helpers (pure) ------------------------------------------
+
+function foldName(value: string): string {
+  return value.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+// Case- and accent-insensitive name search; every word of the query must appear.
+export function searchDirectory<T extends { name: string }>(members: T[], query: string): T[] {
+  const words = foldName(query).split(" ").filter(Boolean);
+  if (!words.length) return members;
+  return members.filter((member) => {
+    const name = foldName(member.name);
+    return words.every((word) => name.includes(word));
+  });
+}
+
+// Page numbers to show: always first and last, the current page and its neighbours,
+// with "gap" where pages are skipped. A gap of one page is shown as that page.
+export function directoryPageList(page: number, pages: number): (number | "gap")[] {
+  const keep = new Set([1, pages, page - 1, page, page + 1].filter((n) => n >= 1 && n <= pages));
+  if (page <= 3) [2, 3, 4].forEach((n) => n <= pages && keep.add(n));
+  if (page >= pages - 2) [pages - 3, pages - 2, pages - 1].forEach((n) => n >= 1 && keep.add(n));
+  const sorted = [...keep].sort((a, b) => a - b);
+  const out: (number | "gap")[] = [];
+  sorted.forEach((n, i) => {
+    const prev = sorted[i - 1];
+    if (prev !== undefined && n - prev === 2) out.push(prev + 1);
+    else if (prev !== undefined && n - prev > 2) out.push("gap");
+    out.push(n);
+  });
+  return out;
+}
