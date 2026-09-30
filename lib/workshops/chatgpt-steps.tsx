@@ -1,7 +1,6 @@
 import {
   AiBuildClubArt,
   BackupArt,
-  ChatArt,
   ContextFilesArt,
   FolderArt,
   LiveLinkArt,
@@ -331,12 +330,23 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
   {
     id: "github-setup",
     part: "optional extras",
-    title: "Let Codex set up the backup tool",
+    title: "Connect Codex to GitHub",
     lines: [
-      "Paste this into Codex, then follow the login steps it gives you.",
+      "Add the GitHub plugin, the same way you added Vercel. Then Codex can save your project to GitHub for you.",
     ],
-    copy: { text: "help me install github cli: https://github.com/cli/cli" },
-    art: <ChatArt ask="help me install github cli" reply="Setting that up now..." assistant="Codex" />,
+    bullets: [
+      "In the left sidebar of Codex, click the Plugins icon.",
+      "Type github in the search box.",
+      "On the GitHub result, click the button on the right to add it.",
+      "Sign in to GitHub when it asks.",
+    ],
+    image: {
+      src: "/workshops/chatgpt/github-plugin.png",
+      width: 976,
+      height: 626,
+      alt: "The Codex Plugins page with github typed in the search box and the GitHub plugin in the results",
+      caption: "Search github, then add the GitHub plugin.",
+    },
   },
   {
     id: "github-save",
