@@ -380,6 +380,14 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     copy: {
       text: "help me install exa mcp: https://docs.exa.ai/reference/exa-mcp",
     },
+    // Reused from the Claude deck. It shows Claude's Connectors screen, so no
+    // caption: this deck installs Exa by prompt, not by clicking a plus.
+    image: {
+      src: "/workshops/claude/exa-connector.png",
+      width: 1080,
+      height: 676,
+      alt: "The Exa search tool listed in a connectors directory",
+    },
   },
   {
     id: "firebase",
@@ -402,6 +410,12 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     copy: {
       text: "help me install firebase mcp: https://firebase.google.com/docs/ai-assistance/mcp-server",
     },
+    image: {
+      src: "/workshops/claude/firebase.png",
+      width: 1134,
+      height: 1120,
+      alt: "The Firebase home page with a Get Started button",
+    },
   },
   {
     id: "posthog",
@@ -420,6 +434,12 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     ],
     copy: {
       text: "help me install posthog mcp: https://posthog.com/docs/model-context-protocol",
+    },
+    image: {
+      src: "/workshops/claude/posthog.png",
+      width: 1174,
+      height: 1044,
+      alt: "The PostHog home page with a Get started, free button in the top right",
     },
   },
 ];
