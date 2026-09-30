@@ -18,8 +18,8 @@ import type { WorkshopStep } from "./types";
 // it. When screenshots arrive, add them under public/workshops/chatgpt/ and an
 // `image` block to the step, as in the Claude deck.
 //
-// Connectors: in the ChatGPT app these are managed under Settings > Plugins
-// (plugins, apps and MCP servers). The optional MCP steps hand Codex the docs
+// Connectors: in Codex these are plugins, opened from the Plugins icon in the
+// left sidebar (confirmed from the owner's step 11 screenshot). The optional MCP steps hand Codex the docs
 // link and let it do the install, which works whatever the settings UI looks
 // like on the day.
 
@@ -248,13 +248,19 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       "A plugin lets Codex talk to Vercel for you. You add it once, from inside the ChatGPT app.",
     ],
     bullets: [
-      "Open Settings in the ChatGPT app.",
-      "Click Plugins.",
+      "In the left sidebar of Codex, click the Plugins icon.",
       "Type vercel in the search box.",
-      "Add Vercel.",
+      "On the Vercel result, click the button on the right to add it.",
       "Sign in to Vercel when it asks.",
     ],
     note: "A plugin lets Codex use another service on your behalf. You never touch it directly.",
+    image: {
+      src: "/workshops/chatgpt/vercel-plugin.png",
+      width: 1222,
+      height: 864,
+      alt: "The Codex Plugins page with the Plugins sidebar icon, the search box with vercel typed in, and the button on the Vercel result circled",
+      caption: "Plugins icon (1), search vercel (2), then add Vercel (3).",
+    },
   },
   {
     id: "publish",
