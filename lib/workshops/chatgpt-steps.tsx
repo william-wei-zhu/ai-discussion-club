@@ -231,6 +231,14 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       "Go to vercel.com and sign up. It is free to start.",
     ],
     links: [{ href: "https://vercel.com/", label: "Open vercel.com" }],
+    // Same Vercel page for either assistant, so this reuses the Claude deck's file.
+    image: {
+      src: "/workshops/claude/vercel-signup.png",
+      width: 1246,
+      height: 1068,
+      alt: "The Vercel home page with the Sign Up button in the top right circled",
+      caption: "Sign Up, top right, circled.",
+    },
   },
   {
     id: "vercel-plugin",
