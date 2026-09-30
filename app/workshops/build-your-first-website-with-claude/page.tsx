@@ -6,7 +6,7 @@ const SHARE_IMAGE = {
   url: '/workshops/claude/title-cover.png',
   width: 1254,
   height: 1254,
-  alt: 'Build your first website in 2 hours, beginner-friendly, with Claude and Vercel',
+  alt: 'Build your first website in 1 hour, beginner-friendly, with Claude and Vercel',
 };
 const description = 'Build your very first web app with Claude, put it on the internet, and keep it safe. Beginners welcome, one step at a time.';
 

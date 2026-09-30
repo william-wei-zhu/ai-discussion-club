@@ -32,7 +32,7 @@ export const CLAUDE_STEPS: WorkshopStep[] = [
     id: "welcome",
     part: "before you start",
     // The title slide: the page itself carries no hero, so it lives here. The
-    // cover art on the left carries the "in 2 hours" hook, so the heading states
+    // cover art on the left carries the "in 1 hour" hook, so the heading states
     // the promise plainly.
     title: "Build your first website",
     lines: [
@@ -44,7 +44,7 @@ export const CLAUDE_STEPS: WorkshopStep[] = [
       src: "/workshops/claude/title-cover.png",
       width: 1254,
       height: 1254,
-      alt: "Build your first website in 2 hours, beginner-friendly, with Claude and Vercel",
+      alt: "Build your first website in 1 hour, beginner-friendly, with Claude and Vercel",
     },
   },
 

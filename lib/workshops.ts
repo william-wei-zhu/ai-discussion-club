@@ -15,7 +15,7 @@ export const WORKSHOPS: Workshop[] = [
     slug: 'build-your-first-website-with-claude',
     title: 'Build your first website with Claude',
     blurb: 'Build your very first web app with Claude, put it on the internet, and keep it safe. Beginners welcome, one step at a time.',
-    cover: { src: '/workshops/claude/title-cover.png', alt: 'Build your first website in 2 hours, beginner-friendly, with Claude and Vercel' },
+    cover: { src: '/workshops/claude/title-cover.png', alt: 'Build your first website in 1 hour, beginner-friendly, with Claude and Vercel' },
     duration: 'About 45 minutes',
     tools: 'Claude and Vercel',
   },
