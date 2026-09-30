@@ -8,11 +8,11 @@ const SHARE_IMAGE = {
   height: 1254,
   alt: 'Build a website in 1 hour, beginner-friendly, with ChatGPT and Vercel',
 };
-const description = 'Build your very first web app with ChatGPT, put it on the internet, and keep it safe. Beginners welcome, one step at a time.';
+const description = 'Build a website with ChatGPT, put it on the internet, and keep it safe. Beginners welcome, one step at a time.';
 
 export const metadata: Metadata = {
   title: 'Build a website with ChatGPT',
-  description: 'A free, step-by-step workshop that walks you through building your very first web app with ChatGPT, putting it on the internet, and keeping it safe. Beginners welcome.',
+  description: 'A free, step-by-step workshop that walks you through building a website with ChatGPT, putting it on the internet, and keeping it safe. Beginners welcome.',
   openGraph: { title: 'Build a website with ChatGPT', description, images: [SHARE_IMAGE] },
   twitter: { card: 'summary_large_image', title: 'Build a website with ChatGPT', description, images: [SHARE_IMAGE.url] },
 };

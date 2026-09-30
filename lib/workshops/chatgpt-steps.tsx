@@ -28,7 +28,7 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     part: "before you start",
     title: "Build a website",
     lines: [
-      "Build your very first web app, one step at a time. You say what you want, and ChatGPT writes the code for you.",
+      "Build a website, one step at a time. You say what you want, and ChatGPT writes the code for you.",
       "By the end you will have something that works, a web address you can send to anyone, and a safe backup of it.",
       "Set aside about 45 minutes. You need a laptop for this one, not a phone.",
     ],
