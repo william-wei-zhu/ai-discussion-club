@@ -10,7 +10,7 @@ import { CopyLine } from "./copy-line";
 // underneath ready to copy. Every listed idea is deliberately something Claude
 // finishes in one go, since the point of this step is a working thing on screen,
 // not an ambitious project that stalls.
-export function IdeaPicker({ ideas }: { ideas: string[] }) {
+export function IdeaPicker({ ideas, label }: { ideas: string[]; label?: string }) {
   const [idea, setIdea] = useState(ideas[0] ?? "");
 
   function roll() {
@@ -48,7 +48,7 @@ export function IdeaPicker({ ideas }: { ideas: string[] }) {
           Surprise me
         </button>
       </div>
-      <CopyLine text={prompt} />
+      <CopyLine text={prompt} label={label} />
     </div>
   );
 }

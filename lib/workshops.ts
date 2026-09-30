@@ -19,6 +19,14 @@ export const WORKSHOPS: Workshop[] = [
     duration: 'About 45 minutes',
     tools: 'Claude and Vercel',
   },
+  {
+    slug: 'build-your-first-website-with-chatgpt',
+    title: 'Build your first website with ChatGPT',
+    blurb: 'Build your very first web app with ChatGPT, put it on the internet, and keep it safe. Beginners welcome, one step at a time.',
+    cover: { src: '/workshops/chatgpt/title-cover.png', alt: 'Build your first website in 1 hour, beginner-friendly, with ChatGPT and Vercel' },
+    duration: 'About 45 minutes',
+    tools: 'ChatGPT and Vercel',
+  },
 ];
 
 export const workshopPath = (slug: string) => `/workshops/${slug}`;

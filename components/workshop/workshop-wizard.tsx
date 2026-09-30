@@ -36,10 +36,13 @@ export function WorkshopWizard({
   workshop,
   steps,
   storageKey,
+  assistant = "Claude",
 }: {
   workshop: string;
   steps: WorkshopStep[];
   storageKey: string;
+  // Who the reader is typing to, for the "type this to ..." copy boxes.
+  assistant?: string;
 }) {
   const [index, setIndex] = useState(0);
   const [restored, setRestored] = useState(false);
@@ -317,6 +320,7 @@ export function WorkshopWizard({
           isLast={i === total - 1}
           headingRef={i === index ? headingRef : undefined}
           workshop={workshop}
+          assistant={assistant}
           onNext={() => go(i + 1)}
           onBack={() => go(i - 1)}
         />
@@ -332,6 +336,7 @@ function StepPanel({
   isLast,
   headingRef,
   workshop,
+  assistant,
   onNext,
   onBack,
 }: {
@@ -341,6 +346,7 @@ function StepPanel({
   isLast: boolean;
   headingRef?: React.RefObject<HTMLHeadingElement | null>;
   workshop: string;
+  assistant: string;
   onNext: () => void;
   onBack: () => void;
 }) {
@@ -486,10 +492,10 @@ function StepPanel({
             </ol>
           ) : null}
 
-          {step.ideas ? <IdeaPicker ideas={step.ideas} /> : null}
+          {step.ideas ? <IdeaPicker ideas={step.ideas} label={`type this to ${assistant}`} /> : null}
 
           {step.copy ? (
-            <CopyLine text={step.copy.text} label={step.copy.label} />
+            <CopyLine text={step.copy.text} label={step.copy.label ?? `type this to ${assistant}`} />
           ) : null}
 
           {!twoUp && step.note ? (

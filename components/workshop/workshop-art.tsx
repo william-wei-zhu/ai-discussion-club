@@ -74,12 +74,12 @@ export function FolderArt({ name }: { name: string }) {
   );
 }
 
-// A chat exchange: you ask in plain English, Claude gets to work. Used for the
+// A chat exchange: you ask in plain English, the assistant gets to work. Used for the
 // "now ask it to build something" step and the two publish/save steps.
-export function ChatArt({ ask, reply }: { ask: string; reply: string }) {
+export function ChatArt({ ask, reply, assistant = "Claude" }: { ask: string; reply: string; assistant?: string }) {
   return (
-    <svg viewBox="0 0 400 240" className={frame} role="img" aria-label={`A chat where you type "${ask}" and Claude replies`}>
-      <WindowChrome label="claude" />
+    <svg viewBox="0 0 400 240" className={frame} role="img" aria-label={`A chat where you type "${ask}" and ${assistant} replies`}>
+      <WindowChrome label={assistant.toLowerCase()} />
       <rect x="120" y="52" width="252" height="46" rx="10" className="fill-primary" />
       <text
         x="136"
@@ -197,8 +197,8 @@ export function BackupArt() {
   );
 }
 
-// Dropping your own material into the folder so Claude can read it.
-export function ContextFilesArt() {
+// Dropping your own material into the folder so the assistant can read it.
+export function ContextFilesArt({ folder = "claude-workspace" }: { folder?: string }) {
   return (
     <svg viewBox="0 0 400 240" className={frame} role="img" aria-label="Files being dragged into your project folder">
       <rect x="1" y="1" width="398" height="238" rx="10" className="fill-secondary stroke-border" strokeWidth="2" />
@@ -247,7 +247,7 @@ export function ContextFilesArt() {
         fontWeight="700"
         fontFamily="ui-monospace, monospace"
       >
-        claude-workspace
+        {folder}
       </text>
     </svg>
   );
