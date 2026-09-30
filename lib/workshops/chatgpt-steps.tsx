@@ -198,11 +198,18 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     part: "getting chatgpt onto your computer",
     title: "Plan first, or just go",
     lines: [
-      "Codex can plan before it builds. Pick Plan in the box where you type, or press Shift and Tab together.",
+      "Codex can plan before it builds. Click the + at the bottom left of the box where you type, then choose Plan mode. Or press Shift and Tab together.",
       "Plan is for a big ask, like the whole app you just made. Codex looks around, works out what it is going to do, and shows you first, before it changes anything. Then it asks whether to go ahead.",
       "For small changes, like making a button bigger or fixing a wrong word, skip Plan. Codex just gets on with it.",
     ],
     note: "Codex asks before doing anything risky. You can leave those settings as they are to start.",
+    image: {
+      src: "/workshops/chatgpt/plan-mode.png",
+      width: 844,
+      height: 572,
+      alt: "The menu opened from the + button in the Codex chat box, with the + button and Plan mode circled",
+      caption: "Click the + (1), then Plan mode (2).",
+    },
   },
   {
     id: "context-files",
