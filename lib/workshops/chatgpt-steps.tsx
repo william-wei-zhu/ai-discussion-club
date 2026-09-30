@@ -26,7 +26,7 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
   {
     id: "welcome",
     part: "before you start",
-    title: "Build your first website",
+    title: "Build a website",
     lines: [
       "Build your very first web app, one step at a time. You say what you want, and ChatGPT writes the code for you.",
       "By the end you will have something that works, a web address you can send to anyone, and a safe backup of it.",
@@ -36,7 +36,7 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       src: "/workshops/chatgpt/title-cover.png",
       width: 1254,
       height: 1254,
-      alt: "Build your first website in 1 hour, beginner-friendly, with ChatGPT and Vercel",
+      alt: "Build a website in 1 hour, beginner-friendly, with ChatGPT and Vercel",
     },
   },
 

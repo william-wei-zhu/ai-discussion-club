@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { displayHost, validateWorkshopSubmission } from "../lib/workshop-submissions";
 
-const workshop = "build-your-first-website-with-claude";
+const workshop = "build-a-website-with-claude";
 
 test("a valid submission is normalized", () => {
   const r = validateWorkshopSubmission({ workshop, name: "  Ada \n Lovelace ", url: "my-app.vercel.app" });
@@ -35,4 +35,12 @@ test("an unknown workshop is rejected", () => {
 
 test("displayHost drops www", () => {
   assert.equal(displayHost("https://www.example.com/x"), "example.com");
+});
+
+test("a renamed workshop's old slug still validates and is stored under the new slug", async () => {
+  const { workshopTitle } = await import("../lib/workshop-submissions");
+  const r = validateWorkshopSubmission({ workshop: "build-your-first-website-with-claude", name: "Ada", url: "https://a.dev" });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.value.workshop, "build-a-website-with-claude");
+  assert.equal(workshopTitle("build-your-first-website-with-claude"), "Build a website with Claude");
 });

@@ -1,5 +1,5 @@
 import { normalizeUrl } from "@/lib/demo-applications";
-import { WORKSHOPS } from "@/lib/workshops";
+import { findWorkshop } from "@/lib/workshops";
 
 // Workshop gallery: people who finish a workshop deck add their name and their
 // app's link on the finish slide. Stored in the top-level `workshopSubmissions`
@@ -26,12 +26,14 @@ export interface WorkshopSubmission extends WorkshopSubmissionInput {
 
 export type SubmissionField = "name" | "url";
 
+// Accepts a previous slug too, so a deck left open across a rename can still
+// submit; validation stores the current slug.
 export function isWorkshopSlug(v: unknown): v is string {
-  return typeof v === "string" && WORKSHOPS.some((w) => w.slug === v);
+  return typeof v === "string" && findWorkshop(v) !== undefined;
 }
 
 export function workshopTitle(slug: string): string {
-  return WORKSHOPS.find((w) => w.slug === slug)?.title ?? "Workshop";
+  return findWorkshop(slug)?.title ?? "Workshop";
 }
 
 export function validateWorkshopSubmission(
@@ -49,7 +51,7 @@ export function validateWorkshopSubmission(
   if (!url) errors.url = "Enter your app's web address, like your-app.vercel.app.";
 
   if (Object.keys(errors).length) return { ok: false, error: "Check the highlighted fields.", errors };
-  return { ok: true, value: { workshop: b.workshop, name, url: url! } };
+  return { ok: true, value: { workshop: findWorkshop(b.workshop)!.slug, name, url: url! } };
 }
 
 export function toSubmission(id: string, x: Record<string, unknown>): WorkshopSubmission {
