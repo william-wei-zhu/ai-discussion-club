@@ -148,6 +148,17 @@
 .ws-submit{display:flex;flex-direction:column;gap:16px;padding:22px 24px;border:2px solid var(--accent);border-radius:22px;background:var(--tint)}
 .ws-submit label{font-size:.95rem}
 .workshops-actions{margin-top:26px}
+/* The gallery link on /workshops: the one place a finished workshop pays off,
+   so it gets a warm purple-to-coral gradient pill, bigger than a normal button,
+   with a soft glow. White text holds at least 4.5:1 across the whole gradient.
+   The sheen sweeps once per hover, never on a loop. */
+.button.gallery-cta{position:relative;overflow:hidden;isolation:isolate;min-height:62px;padding:16px 32px;gap:12px;font-size:1.08rem;font-weight:600;color:#fff;border:0;background:linear-gradient(115deg,#5b36a3 0%,#9a3a8c 55%,#bf4436 100%);box-shadow:0 18px 40px -18px rgba(154,58,140,.75),0 0 0 4px color-mix(in srgb,#9a3a8c 16%,transparent);transition:transform .25s ease,box-shadow .25s ease}
+.button.gallery-cta::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-120%)}
+.button.gallery-cta:hover{filter:none;transform:translateY(-2px);box-shadow:0 24px 48px -18px rgba(154,58,140,.9),0 0 0 6px color-mix(in srgb,#9a3a8c 22%,transparent)}
+.button.gallery-cta:hover::after{transform:translateX(120%);transition:transform .7s ease}
+.gallery-cta-arrow{transition:transform .25s ease}.button.gallery-cta:hover .gallery-cta-arrow{transform:translateX(4px)}
+@media (prefers-reduced-motion:reduce){.button.gallery-cta,.button.gallery-cta:hover,.gallery-cta-arrow,.button.gallery-cta:hover .gallery-cta-arrow{transform:none;transition:none}.button.gallery-cta::after{display:none}}
+@media (max-width:520px){.button.gallery-cta{width:100%;padding-inline:22px}}
 .gallery-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
 .gallery-item{display:flex;flex-direction:column;gap:6px;height:100%;padding:22px 24px;text-decoration:none;color:var(--foreground);border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 40%,var(--background));transition:transform .3s cubic-bezier(.2,.7,.2,1),box-shadow .3s,border-color .3s}
 .gallery-item:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--accent)}
