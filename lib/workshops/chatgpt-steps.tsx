@@ -319,6 +319,14 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       "Go to github.com and sign up. The free account is plenty.",
     ],
     links: [{ href: "https://github.com/", label: "Open github.com" }],
+    // Same GitHub page for either assistant, so this reuses the Claude deck's file.
+    image: {
+      src: "/workshops/claude/github-signup.png",
+      width: 1140,
+      height: 796,
+      alt: "The GitHub home page with the email box and Sign up for GitHub button circled",
+      caption: "Type your email, then Sign up for GitHub.",
+    },
   },
   {
     id: "github-setup",
