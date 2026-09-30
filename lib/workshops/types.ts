@@ -7,6 +7,14 @@ export type WorkshopBullet =
   | string
   | { text: string; link: { href: string; label: string } };
 
+export type WorkshopImage = {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption?: string;
+};
+
 export type WorkshopStep = {
   id: string;
   // Section label shown above the title, groups steps into four parts.
@@ -25,13 +33,9 @@ export type WorkshopStep = {
   // Ride in the left column with the picture, since "open the site" pairs with
   // the picture of the site.
   links?: { href: string; label: string }[];
-  image?: {
-    src: string;
-    width: number;
-    height: number;
-    alt: string;
-    caption?: string;
-  };
+  // One screenshot, or a short sequence of them stacked top to bottom in the
+  // picture column (they share its height, each with its own caption).
+  image?: WorkshopImage | WorkshopImage[];
   art?: ReactNode;
   // A smaller aside. Rides in the left column on a two-column slide, since it
   // is secondary and moving it is what keeps the instruction column short.

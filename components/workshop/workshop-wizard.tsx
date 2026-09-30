@@ -350,7 +350,8 @@ function StepPanel({
   onNext: () => void;
   onBack: () => void;
 }) {
-  const media = step.image || step.art ? true : false;
+  const images = step.image ? [step.image].flat() : [];
+  const media = images.length > 0 || step.art ? true : false;
   // A step with nothing to show on the left (or one marked `wide`) runs as one
   // centred column instead.
   const twoUp = media && !step.wide;
@@ -380,14 +381,17 @@ function StepPanel({
               portrait screenshot (816x874) pushes them off the bottom. It is
               never scaled past its natural size, so a small screenshot stays
               sharp instead of blowing up blurry. */}
-          {step.image ? (
-            <figure className="flex flex-col gap-2 lg:min-h-0 lg:flex-1">
-              <div className="flex items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-card p-2 sm:p-3 lg:min-h-0 lg:flex-1">
+          {images.map((image) => (
+            // A single picture fills the column; a sequence sizes each box to
+            // its own picture (shrinking only if the column runs short), so a
+            // short strip does not sit in a half-empty frame.
+            <figure key={image.src} className={cn("flex flex-col gap-2 lg:min-h-0", images.length > 1 ? "lg:flex-initial" : "lg:flex-1")}>
+              <div className={cn("flex items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-card p-2 sm:p-3 lg:min-h-0", images.length > 1 ? "lg:flex-initial" : "lg:flex-1")}>
                 <Image
-                  src={step.image.src}
-                  alt={step.image.alt}
-                  width={step.image.width}
-                  height={step.image.height}
+                  src={image.src}
+                  alt={image.alt}
+                  width={image.width}
+                  height={image.height}
                   sizes="(max-width: 1024px) 100vw, 600px"
                   // On a slide the picture fills its box exactly and letterboxes
                   // inside it. A flex item's default `min-width: auto` is the
@@ -399,13 +403,13 @@ function StepPanel({
                   priority={active}
                 />
               </div>
-              {step.image.caption ? (
+              {image.caption ? (
                 <figcaption className="shrink-0 text-[length:var(--ws-small)] leading-relaxed text-muted-foreground">
-                  {step.image.caption}
+                  {image.caption}
                 </figcaption>
               ) : null}
             </figure>
-          ) : null}
+          ))}
 
           {step.art ? (
             <div className="flex items-center justify-center lg:min-h-0 lg:flex-1 [&>svg]:lg:max-h-full">

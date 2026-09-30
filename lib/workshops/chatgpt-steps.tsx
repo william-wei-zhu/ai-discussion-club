@@ -95,9 +95,32 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     part: "getting chatgpt onto your computer",
     title: "Point Codex at your folder",
     lines: [
-      "In Codex, add a project and choose the chatgpt-workspace folder you just made.",
-      "Start a new chat under it and make sure Local is selected, so Codex works on your own computer. Now everything it builds goes into that folder.",
+      "Tell Codex which folder to work in. Follow the numbers in the pictures.",
     ],
+    bullets: [
+      "Click Choose project, next to This computer.",
+      "Click New project.",
+      "Under Source folders, click Add and pick the chatgpt-workspace folder you just made.",
+      "Give the project a name, like chatgpt-workspace.",
+      "Click Create project. Now everything Codex builds goes into that folder.",
+    ],
+    image: [
+      {
+        src: "/workshops/chatgpt/choose-project.png",
+        width: 726,
+        height: 214,
+        alt: "The bar under the Codex chat box with Choose project circled and New project circled in the menu above it",
+        caption: "Click Choose project (1), then New project (2).",
+      },
+      {
+        src: "/workshops/chatgpt/create-project.png",
+        width: 1182,
+        height: 702,
+        alt: "The Create project window with the Add folder button, the Project name box, and the Create project button circled",
+        caption: "Add your folder (3), name the project (4), then Create project (5).",
+      },
+    ],
+    note: "Leave This computer selected, so Codex works on your own laptop.",
   },
   {
     id: "build-something",
