@@ -67,9 +67,16 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
     part: "getting chatgpt onto your computer",
     title: "Open Codex",
     lines: [
-      "In the ChatGPT app, choose Codex.",
-      "That is the part that builds your app. You are already signed in, so there is nothing else to set up.",
+      "At the top of the ChatGPT app, click the word ChatGPT to open the menu.",
+      "Choose Codex. That is the part that builds your app. You are already signed in, so there is nothing else to set up.",
     ],
+    image: {
+      src: "/workshops/chatgpt/open-codex.png",
+      width: 676,
+      height: 442,
+      alt: "The ChatGPT app menu opened from the ChatGPT title, with Codex circled below ChatGPT",
+      caption: "Click ChatGPT at the top (1), then choose Codex (2).",
+    },
     note: "Codex is the builder that comes with ChatGPT. It is where you type what you want and watch ChatGPT make it.",
   },
   {
