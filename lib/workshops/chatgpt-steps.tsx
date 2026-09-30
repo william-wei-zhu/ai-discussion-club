@@ -185,6 +185,13 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       "a piano you can play with the keyboard",
     ],
     note: "The more you say, the better it comes out. Mention who it is for and what it should look like.",
+    image: {
+      src: "/workshops/chatgpt/ask-codex.png",
+      width: 868,
+      height: 368,
+      alt: "The Codex chat box with a project folder and This computer selected, and a request to build a rock paper scissors game typed in",
+      caption: "This is what it looks like once your line is in the box. Press the arrow to send it.",
+    },
   },
   {
     id: "modes",
