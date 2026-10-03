@@ -110,7 +110,11 @@ export async function syncEvents(): Promise<SyncSummary> {
   let created = 0;
   for (const e of events) {
     if (!e.api_id) continue;
-    const doc = toClubEvent(e, now);
+    // Firestore rejects undefined. A field Luma no longer has (an emptied
+    // description, a removed address) is deleted so the mirror never keeps it.
+    const doc = Object.fromEntries(
+      Object.entries(toClubEvent(e, now)).map(([k, v]) => [k, v === undefined ? FieldValue.delete() : v]),
+    );
     const isNew = !existing.has(e.api_id);
     if (isNew) created++;
     writer.set(
