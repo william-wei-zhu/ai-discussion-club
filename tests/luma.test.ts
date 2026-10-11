@@ -8,6 +8,7 @@ import {
   isApproved,
   personEmail,
   personName,
+  eventAsksLinkedIn,
   linkedinFromAnswers,
   isProfileUrl,
   substantiveAnswers,
@@ -188,4 +189,20 @@ test("host key and email normalise like guest ones", () => {
   assert.equal(hostKey({ id: "usr-2" }), "usr-2");
   assert.equal(hostKey({}), null);
   assert.equal(hostEmail({ email: " Rich@Example.COM " }), "rich@example.com");
+});
+
+test("linkedinFromAnswers rejects answers that do not name an /in/ profile", () => {
+  for (const answer of ["none", "N/A", "skip", "no linkedin", "linkedin.com/company/acme"]) {
+    assert.equal(linkedinFromAnswers({ registration_answers: [{ question_type: "linkedin", answer }] }), null, answer);
+  }
+  assert.equal(linkedinFromAnswers({ registration_answers: [{ question_type: "linkedin", answer: "in/ada" }] }), "https://www.linkedin.com/in/ada");
+  assert.equal(linkedinFromAnswers({ registration_answers: [{ question_type: "linkedin", answer: "linkedin.com/in/Ada/" }] }), "https://www.linkedin.com/in/ada");
+});
+
+test("eventAsksLinkedIn reads stored and raw Luma questions", () => {
+  assert.equal(eventAsksLinkedIn([{ id: "q1", label: "Profile", questionType: "linkedin" }]), true);
+  assert.equal(eventAsksLinkedIn([{ label: "Your LinkedIn URL", question_type: "text" }]), true);
+  assert.equal(eventAsksLinkedIn([{ label: "What are you building?", questionType: "long-text" }]), false);
+  assert.equal(eventAsksLinkedIn([]), false);
+  assert.equal(eventAsksLinkedIn(undefined), false);
 });

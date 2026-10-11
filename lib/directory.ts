@@ -2,6 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } f
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "@/lib/firebase-admin";
 import { normalizeLinkedInUrl } from "@/lib/linkedin";
+import { eventAsksLinkedIn } from "@/lib/luma";
 import { profilePhoto } from "@/lib/profile-rules";
 import { siteUrl } from "@/lib/site";
 import { secret as serverSecret } from "@/lib/unsubscribe";
@@ -170,24 +171,52 @@ export function trustedLinkedIn(raw: unknown, confidence: unknown): string | und
 // Opt-out: every going guest and every host is listed unless they turned the
 // directory off for this event in /preferences (a directoryConsent doc with
 // enabled === false). No consent doc means listed.
+// When the event's registration asks for LinkedIn (requiresLinkedIn), a guest who
+// is not a host must also have shared one: answered it for this event, or set it
+// themselves on /preferences. A LinkedIn found any other way does not count.
 export function visibleDirectoryMember(input: {
   approvalStatus?: unknown;
   isHost?: unknown;
   optedOut?: unknown;
+  requiresLinkedIn?: boolean;
+  sharedLinkedIn?: boolean;
 }): boolean {
-  return input.optedOut !== true &&
-    (input.approvalStatus === "approved" || input.isHost === true);
+  if (input.optedOut === true) return false;
+  if (input.isHost === true) return true;
+  if (input.approvalStatus !== "approved") return false;
+  return !input.requiresLinkedIn || input.sharedLinkedIn === true;
+}
+
+// Events from this date on that ask for LinkedIn list only people who shared it.
+// Earlier events also asked, but their pages were already sent out listing every
+// going guest, so they stay as they were.
+export const LINKEDIN_REQUIRED_FROM = Date.UTC(2026, 9, 11);
+
+export function directoryRequiresLinkedIn(event: { startAt?: unknown; registrationQuestions?: unknown }): boolean {
+  return typeof event.startAt === "number" && event.startAt >= LINKEDIN_REQUIRED_FROM &&
+    eventAsksLinkedIn(event.registrationQuestions);
+}
+
+// The person chose to share their LinkedIn: a registration answer for this event,
+// or a URL they set themselves on /preferences.
+export function sharedLinkedIn(guest: Record<string, unknown>, contact: Record<string, unknown>): boolean {
+  if (typeof guest.linkedinFromAnswers === "string" && guest.linkedinFromAnswers) return true;
+  return contact.linkedinSource === "self" && contact.linkedinConfidence === "given" &&
+    typeof contact.linkedinUrl === "string" && !!contact.linkedinUrl;
 }
 
 export function toDirectoryCard(input: {
   guest: Record<string, unknown>;
   contact?: Record<string, unknown>;
+  requiresLinkedIn?: boolean;
 }): DirectoryCard | null {
-  const { guest, contact = {} } = input;
+  const { guest, contact = {}, requiresLinkedIn = false } = input;
   if (!visibleDirectoryMember({
     approvalStatus: guest.approvalStatus,
     isHost: guest.isHost,
     optedOut: guest.optedOut,
+    requiresLinkedIn,
+    sharedLinkedIn: sharedLinkedIn(guest, contact),
   })) return null;
   const name = String(contact.name || guest.name || "").trim();
   if (!name) return null;
@@ -206,7 +235,7 @@ export function toDirectoryCard(input: {
 }
 
 export async function directoryForToken(token: string): Promise<{
-  event: { name: string; startAt?: number };
+  event: { name: string; startAt?: number; requiresLinkedIn: boolean };
   members: DirectoryCard[];
 } | null> {
   if (!isDirectoryToken(token)) return null;
@@ -222,6 +251,10 @@ export async function directoryForToken(token: string): Promise<{
   ]);
   if (!eventSnap.exists) return null;
   const optedOut = new Set(optOutSnap.docs.map((doc) => doc.id));
+  const event = eventSnap.data() ?? {};
+  const requiresLinkedIn = directoryRequiresLinkedIn(event);
+  // Cheap prefilter so contacts are only read for possible members; toDirectoryCard
+  // applies the full rule (including the LinkedIn requirement) below.
   const guests = guestSnap.docs.filter((doc) => {
     const g = doc.data();
     return !optedOut.has(doc.id) && (g.approvalStatus === "approved" || g.isHost === true);
@@ -230,18 +263,18 @@ export async function directoryForToken(token: string): Promise<{
   for (let i = 0; i < guests.length; i += 300) {
     const refs = guests.slice(i, i + 300).map((g) => db().collection("clubContacts").doc(g.id));
     if (!refs.length) continue;
-    const snaps = await db().getAll(...refs, { fieldMask: ["name", "headline", "linkedinUrl", "linkedinConfidence", "linkedinPhoto", "avatarUrl", "photoUrl"] });
+    const snaps = await db().getAll(...refs, { fieldMask: ["name", "headline", "linkedinUrl", "linkedinConfidence", "linkedinSource", "linkedinPhoto", "avatarUrl", "photoUrl"] });
     for (const snap of snaps) if (snap.exists) contacts.set(snap.id, snap.data() as Record<string, unknown>);
   }
   const members = guests.flatMap((snap) => {
     const card = toDirectoryCard({
       guest: { ...snap.data(), optedOut: false },
       contact: contacts.get(snap.id),
+      requiresLinkedIn,
     });
     return card ? [card] : [];
   }).sort((a, b) => Number(b.isHost) - Number(a.isHost) || a.name.localeCompare(b.name));
-  const event = eventSnap.data() ?? {};
-  return { event: { name: String(event.name || "AI Discussion Club event"), ...(typeof event.startAt === "number" ? { startAt: event.startAt } : {}) }, members };
+  return { event: { name: String(event.name || "AI Discussion Club event"), ...(typeof event.startAt === "number" ? { startAt: event.startAt } : {}), requiresLinkedIn }, members };
 }
 
 // --- Directory page helpers (pure) ------------------------------------------

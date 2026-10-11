@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { decryptToken, directoryPageList, encryptToken, hashToken, isDirectoryToken, randomUrlToken, searchDirectory, toDirectoryCard, trustedLinkedIn, trustedLinkedInPhoto, trustedPhotoUrl, visibleDirectoryMember } from "../lib/directory";
+import { decryptToken, directoryPageList, directoryRequiresLinkedIn, LINKEDIN_REQUIRED_FROM, encryptToken, hashToken, isDirectoryToken, randomUrlToken, searchDirectory, toDirectoryCard, trustedLinkedIn, trustedLinkedInPhoto, trustedPhotoUrl, visibleDirectoryMember } from "../lib/directory";
 
 test("directory tokens are random URL-safe values stored by hash", () => {
   const a = randomUrlToken();
@@ -82,4 +82,33 @@ test("directory page list keeps first, last and neighbours with gaps", () => {
   assert.deepEqual(directoryPageList(10, 10), [1, "gap", 7, 8, 9, 10]);
   assert.deepEqual(directoryPageList(5, 10), [1, "gap", 4, 5, 6, "gap", 10]);
   assert.deepEqual(directoryPageList(4, 10), [1, 2, 3, 4, 5, "gap", 10]);
+});
+
+test("events that ask for LinkedIn list only guests who shared it, plus hosts", () => {
+  const guest = { approvalStatus: "approved" };
+  const exa = { name: "Ada", linkedinUrl: "https://www.linkedin.com/in/ada", linkedinConfidence: "high", linkedinSource: "exa_search" };
+  const card = (g: Record<string, unknown>, contact: Record<string, unknown> = { name: "Ada" }, requiresLinkedIn = true) =>
+    toDirectoryCard({ guest: g, contact, requiresLinkedIn });
+  // Answered for this event.
+  assert.ok(card({ ...guest, linkedinFromAnswers: "https://www.linkedin.com/in/ada" }));
+  // Left it blank: hidden, even when we found their LinkedIn another way.
+  assert.equal(card(guest), null);
+  assert.equal(card(guest, exa), null);
+  assert.equal(card(guest, { ...exa, linkedinConfidence: "given", linkedinSource: "admin" }), null);
+  // Set it themselves on /preferences.
+  assert.ok(card(guest, { ...exa, linkedinConfidence: "given", linkedinSource: "self" }));
+  // Hosts stay.
+  assert.ok(card({ approvalStatus: "invited", isHost: true }));
+  // Opting out always wins.
+  assert.equal(card({ ...guest, optedOut: true, linkedinFromAnswers: "https://www.linkedin.com/in/ada" }), null);
+  // Events without the question are unchanged.
+  assert.ok(card(guest, { name: "Ada" }, false));
+});
+
+test("only events from the cutoff that ask for LinkedIn require it", () => {
+  const asks = [{ id: "q", label: "LinkedIn", questionType: "linkedin" }];
+  assert.equal(directoryRequiresLinkedIn({ startAt: LINKEDIN_REQUIRED_FROM, registrationQuestions: asks }), true);
+  assert.equal(directoryRequiresLinkedIn({ startAt: LINKEDIN_REQUIRED_FROM - 1, registrationQuestions: asks }), false);
+  assert.equal(directoryRequiresLinkedIn({ startAt: LINKEDIN_REQUIRED_FROM, registrationQuestions: [] }), false);
+  assert.equal(directoryRequiresLinkedIn({ registrationQuestions: asks }), false);
 });

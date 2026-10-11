@@ -291,7 +291,7 @@ ${clubHeader()}
 
 <p style="margin-top:24px">Hi ${esc(p.toName.split(" ")[0] || "there")},</p>
 
-<p>Thanks for coming. Everyone who was at the event is in one private directory, with their background and LinkedIn, so you can follow up with the people you met and reach the ones you missed.</p>
+<p>Thanks for coming. The people from the event are in one private directory, with their background and LinkedIn, so you can follow up with the people you met and reach the ones you missed.</p>
 
 ${button(directory, "Connect with fellow participants", COPPER)}
 <p style="color:#444;font-size:14px">The link is private to this event&apos;s guests, so please don&apos;t share it publicly. Wrong photo or LinkedIn, or rather not be listed? <a href="${BASE}/preferences" style="color:#444">Update your profile</a>.</p>

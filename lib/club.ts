@@ -273,7 +273,12 @@ export async function syncEventGuests(eventApiId: string): Promise<SyncSummary> 
       signalTier: guestSignalTier(g, trusted),
       syncedAt: now,
     };
-    writer.set(guestsCol.doc(id), stripUndefined(doc as unknown as Record<string, unknown>), { merge: true });
+    // A cleared answer must clear the stored one: merge would otherwise keep it, and
+    // the private event page treats it as the guest sharing their LinkedIn.
+    writer.set(guestsCol.doc(id), {
+      ...stripUndefined(doc as unknown as Record<string, unknown>),
+      ...(li ? {} : { linkedinFromAnswers: FieldValue.delete() }),
+    }, { merge: true });
     written++;
 
     // A guest who isn't on the calendar roster still needs a contact doc.

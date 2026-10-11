@@ -27,7 +27,7 @@ export default async function DirectoryPage({ params, searchParams }: {
   const page = Number.isInteger(requested) ? Math.min(Math.max(requested, 1), pages) : 1;
   const visible = members.slice((page - 1) * DIRECTORY_PAGE_SIZE, page * DIRECTORY_PAGE_SIZE);
   return <div className="wrap page-content">
-    <div className="page-heading"><p>Private event directory</p><h1>{result.event.name}</h1><p>Shared only with people who have this private link. Everyone going to this event is listed unless they chose to hide.</p></div>
+    <div className="page-heading"><p>Private event directory</p><h1>{result.event.name}</h1><p>Shared only with people who have this private link. {result.event.requiresLinkedIn ? "Lists everyone going who shared their LinkedIn, plus the hosts, unless they chose to hide." : "Everyone going to this event is listed unless they chose to hide."}</p></div>
     {result.members.length ? <form className="directory-search" role="search" method="get">
       <label className="sr-only" htmlFor="directory-q">Search by name</label>
       <input id="directory-q" name="q" type="search" placeholder="Search by name" defaultValue={query} autoComplete="off" maxLength={100} />

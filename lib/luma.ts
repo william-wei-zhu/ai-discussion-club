@@ -306,13 +306,28 @@ function isLinkedInQuestion(a: LumaAnswer): boolean {
   return qtype === "linkedin" || label.includes("linkedin");
 }
 
+/** True when the event's registration form asks for LinkedIn (same test as the answers). */
+export function eventAsksLinkedIn(questions: unknown): boolean {
+  if (!Array.isArray(questions)) return false;
+  return questions.some((q) => !!q && typeof q === "object" && isLinkedInQuestion({
+    label: (q as { label?: string }).label,
+    question_type: (q as { question_type?: string; questionType?: string }).question_type ?? (q as { questionType?: string }).questionType,
+  }));
+}
+
+// An answer must name an /in/ path. normalizeLinkedInUrl alone would turn a bare
+// word such as "none" or "skip" into linkedin.com/in/none.
+const IN_PATH_RE = /(^|[\s/.])in\/[^\s/?#)]+/i;
+
 // Luma stores LinkedIn answers as a path like "/in/handle", sometimes a full URL.
 export function linkedinFromAnswers(g: Pick<LumaGuest, "registration_answers">): string | null {
   const ra = g.registration_answers;
   if (!Array.isArray(ra)) return null;
   for (const a of ra) {
     if (!isLinkedInQuestion(a)) continue;
-    const url = normalizeLinkedInUrl(a?.answer ?? a?.value ?? a?.text ?? "");
+    const raw = a?.answer ?? a?.value ?? a?.text;
+    if (typeof raw !== "string" || !IN_PATH_RE.test(raw)) continue;
+    const url = normalizeLinkedInUrl(raw);
     if (url) return url;
   }
   return null;
