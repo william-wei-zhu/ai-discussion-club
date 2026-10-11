@@ -49,6 +49,12 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       "Choose the Plus plan at $20 a month. The free one runs out partway through a project.",
     ],
     links: [{ href: "https://chatgpt.com/", label: "Open chatgpt.com" }],
+    image: {
+      src: "/workshops/chatgpt/get-chatgpt.webp",
+      width: 800,
+      height: 800,
+      alt: "The ChatGPT logo above the word ChatGPT",
+    },
   },
   {
     id: "download-chatgpt",
@@ -60,6 +66,13 @@ export const CHATGPT_STEPS: WorkshopStep[] = [
       "Then open the app and sign in with the account you just made.",
     ],
     links: [{ href: "https://chatgpt.com/download", label: "Open chatgpt.com/download" }],
+    image: {
+      src: "/workshops/chatgpt/download-chatgpt.png",
+      width: 1200,
+      height: 632,
+      alt: "The ChatGPT download page with a Download for macOS button",
+      caption: "The download button.",
+    },
   },
   {
     id: "open-codex",
