@@ -36,7 +36,7 @@ export const WORKSHOPS: Workshop[] = [
     slug: 'reach-the-right-people-with-exa',
     title: 'Reach the right people with Exa',
     blurb: 'Use Exa to research the right people, write messages they answer, and build a real list. Works with Claude or ChatGPT.',
-    cover: { src: '/workshops/exa/title-cover.png', alt: 'Reach the right people with Exa, a workshop with Claude or ChatGPT' },
+    cover: { src: '/workshops/exa/title-cover.png', alt: 'AI-Powered Growth: Outreach, Pipeline, and Getting Found by AI. DC Startup and Tech Week, Tuesday, October 20, 2026, 9:00 to 9:45 AM ET, MLK Conference Center' },
     duration: 'About 45 minutes',
     tools: 'Claude or ChatGPT and Exa',
   },

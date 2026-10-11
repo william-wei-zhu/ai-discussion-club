@@ -6,7 +6,7 @@ const SHARE_IMAGE = {
   url: '/workshops/exa/title-cover.png',
   width: 1254,
   height: 1254,
-  alt: 'Reach the right people with Exa, a workshop with Claude or ChatGPT',
+  alt: 'AI-Powered Growth: Outreach, Pipeline, and Getting Found by AI. DC Startup and Tech Week, Tuesday, October 20, 2026, 9:00 to 9:45 AM ET, MLK Conference Center',
 };
 const description = 'Use Exa to research the right people, write messages they answer, and build a real list. Works with Claude or ChatGPT.';
 

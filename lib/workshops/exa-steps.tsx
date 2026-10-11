@@ -13,9 +13,8 @@ import type { WorkshopStep } from "./types";
 // account. That is why the $50 code (redeemed on the Billing page) matters.
 //
 // Screenshots still to come from the owner, shown as ScreenshotPlaceholder:
-// the cover (public/workshops/exa/title-cover.png is a stand-in), the Exa
-// Billing page, ChatGPT's Exa plugin page, a checked message, and the result
-// table. Swap each `art` for an `image` block as they arrive, under
+// the Exa Billing page, ChatGPT's Exa plugin page, a checked message, and the
+// result table. Swap each `art` for an `image` block as they arrive, under
 // public/workshops/exa/.
 
 export const EXA_STEPS: WorkshopStep[] = [
@@ -32,7 +31,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       src: "/workshops/exa/title-cover.png",
       width: 1254,
       height: 1254,
-      alt: "Reach the right people with Exa, a workshop with Claude or ChatGPT",
+      alt: "AI-Powered Growth: Outreach, Pipeline, and Getting Found by AI. DC Startup and Tech Week, Tuesday, October 20, 2026, 9:00 to 9:45 AM ET, MLK Conference Center",
     },
   },
 
