@@ -277,3 +277,17 @@ export function AiBuildClubArt() {
     </div>
   );
 }
+
+// Stands in for a screenshot the owner has not sent yet, so the slide keeps its
+// two-column layout and the gap is obvious. Swap it for an `image` block when
+// the real picture arrives.
+export function ScreenshotPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="flex aspect-[16/10] w-full max-w-xl flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/60 p-6 text-center">
+      <span className="kicker">screenshot coming</span>
+      <span className="text-[length:var(--ws-small,0.95rem)] leading-relaxed text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  );
+}

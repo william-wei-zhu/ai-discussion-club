@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Dices } from "lucide-react";
 import { CopyLine } from "./copy-line";
 
@@ -10,8 +10,26 @@ import { CopyLine } from "./copy-line";
 // underneath ready to copy. Every listed idea is deliberately something Claude
 // finishes in one go, since the point of this step is a working thing on screen,
 // not an ambitious project that stalls.
-export function IdeaPicker({ ideas, label }: { ideas: string[]; label?: string }) {
+//
+// `prompt` reuses the same box for other fill-in prompts (the Exa deck's "who
+// do you want to reach?"). Without a roll list there is no Surprise me button.
+const BUILD_PROMPT = {
+  label: "what do you want to build?",
+  placeholder: "a birthday countdown page",
+  template: "help me build {idea}",
+};
+
+export function IdeaPicker({
+  ideas,
+  label,
+  prompt = BUILD_PROMPT,
+}: {
+  ideas: string[];
+  label?: string;
+  prompt?: { label: string; placeholder: string; template: string };
+}) {
   const [idea, setIdea] = useState(ideas[0] ?? "");
+  const id = useId();
 
   function roll() {
     if (ideas.length < 2) return;
@@ -20,35 +38,37 @@ export function IdeaPicker({ ideas, label }: { ideas: string[]; label?: string }
   }
 
   const trimmed = idea.trim();
-  const prompt = `help me build ${trimmed || "..."}`;
+  const line = prompt.template.replace("{idea}", trimmed || "...");
 
   return (
     <div className="flex flex-col gap-3">
       <label
-        htmlFor="workshop-idea"
+        htmlFor={id}
         className="kicker block"
       >
-        what do you want to build?
+        {prompt.label}
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
-          id="workshop-idea"
+          id={id}
           value={idea}
           maxLength={120}
           onChange={(e) => setIdea(e.target.value)}
-          placeholder="a birthday countdown page"
+          placeholder={prompt.placeholder}
           className="h-12 min-w-0 flex-1 rounded-full border-2 border-input bg-background px-5 text-[length:var(--ws-body,1.15rem)] text-foreground outline-none placeholder:text-foreground/45 focus-visible:border-primary"
         />
-        <button
-          type="button"
-          onClick={roll}
-          className="button secondary shrink-0 !text-[length:var(--ws-small,0.95rem)]"
-        >
-          <Dices className="h-5 w-5" />
-          Surprise me
-        </button>
+        {ideas.length > 1 ? (
+          <button
+            type="button"
+            onClick={roll}
+            className="button secondary shrink-0 !text-[length:var(--ws-small,0.95rem)]"
+          >
+            <Dices className="h-5 w-5" />
+            Surprise me
+          </button>
+        ) : null}
       </div>
-      <CopyLine text={prompt} label={label} />
+      <CopyLine text={line} label={label} />
     </div>
   );
 }

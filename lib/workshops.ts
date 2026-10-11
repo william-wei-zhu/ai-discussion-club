@@ -32,6 +32,14 @@ export const WORKSHOPS: Workshop[] = [
     duration: 'About 45 minutes',
     tools: 'ChatGPT and Vercel',
   },
+  {
+    slug: 'reach-the-right-people-with-exa',
+    title: 'Reach the right people with Exa',
+    blurb: 'Use Exa to research the right people, write messages they answer, and build a real list. Works with Claude or ChatGPT.',
+    cover: { src: '/workshops/exa/title-cover.png', alt: 'Reach the right people with Exa, a workshop with Claude or ChatGPT' },
+    duration: 'About 45 minutes',
+    tools: 'Claude or ChatGPT and Exa',
+  },
 ];
 
 export const workshopPath = (slug: string) => `/workshops/${slug}`;

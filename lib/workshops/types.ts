@@ -26,6 +26,11 @@ export type WorkshopStep = {
   // Swaps the fixed copy box for one where the reader supplies the idea (typed
   // or rolled from this list) and the prompt assembles itself.
   ideas?: string[];
+  // A fill-in prompt: the reader types into one box and `template` (with
+  // `{idea}` where their words go) assembles the line to copy. Works alone, or
+  // with `ideas` as the roll list. A string, not a function, because steps
+  // cross from the server page into the client wizard.
+  idea?: { label: string; placeholder: string; template: string };
   // Numbered sub-steps, for the optional add-ons. A bullet can carry its own
   // inline button when the action belongs right next to that line rather than
   // in the row under the picture.

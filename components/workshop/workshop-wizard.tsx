@@ -496,7 +496,13 @@ function StepPanel({
             </ol>
           ) : null}
 
-          {step.ideas ? <IdeaPicker ideas={step.ideas} label={`type this to ${assistant}`} /> : null}
+          {step.ideas || step.idea ? (
+            <IdeaPicker
+              ideas={step.ideas ?? []}
+              label={`type this to ${assistant}`}
+              prompt={step.idea}
+            />
+          ) : null}
 
           {step.copy ? (
             <CopyLine text={step.copy.text} label={step.copy.label ?? `type this to ${assistant}`} />
