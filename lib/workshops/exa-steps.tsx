@@ -1,4 +1,4 @@
-import { ScreenshotPlaceholder } from "@/components/workshop/workshop-art";
+import { ChatArt, ScreenshotPlaceholder } from "@/components/workshop/workshop-art";
 import type { WorkshopStep } from "./types";
 
 // The outreach deck: connect Claude or ChatGPT to Exa, then do two jobs.
@@ -12,10 +12,14 @@ import type { WorkshopStep } from "./types";
 // Exa signs people in when they add it, so searches bill to their own Exa
 // account. That is why the $50 code (redeemed on the Billing page) matters.
 //
-// Screenshots still to come from the owner, shown as ScreenshotPlaceholder:
-// the Exa Billing page, ChatGPT's Exa plugin page, a checked message, and the
-// result table. Swap each `art` for an `image` block as they arrive, under
-// public/workshops/exa/.
+// Pictures are reused where the club already had them: the Claude sign-up and
+// ChatGPT logo from the website decks, Claude's Exa connector, and ChatArt
+// drawings for the prompt slides. ChatGPT's Exa plugin page was captured from
+// the public chatgpt.com/plugins/exa. Still a placeholder: the Exa Billing page
+// (step 3), which needs a logged-in screenshot. Swap its `art` for an `image`
+// under public/workshops/exa/ when it arrives.
+
+const CHAT = "Claude or ChatGPT";
 
 export const EXA_STEPS: WorkshopStep[] = [
   {
@@ -47,7 +51,22 @@ export const EXA_STEPS: WorkshopStep[] = [
       { href: "https://claude.ai/", label: "Open claude.ai" },
       { href: "https://chatgpt.com/", label: "Open chatgpt.com" },
     ],
-    art: <ScreenshotPlaceholder label="Claude and ChatGPT side by side" />,
+    image: [
+      {
+        src: "/workshops/claude/get-claude.png",
+        width: 1442,
+        height: 1150,
+        alt: "The Claude sign-up page with Continue with Google and Continue with email options",
+        caption: "Claude: sign up with Google, or with your email address.",
+      },
+      {
+        src: "/workshops/chatgpt/get-chatgpt.webp",
+        width: 800,
+        height: 800,
+        alt: "The ChatGPT logo above the word ChatGPT",
+        caption: "ChatGPT: the same account you use on chatgpt.com.",
+      },
+    ],
   },
   {
     id: "exa-account",
@@ -81,19 +100,27 @@ export const EXA_STEPS: WorkshopStep[] = [
     bullets: [
       "Claude: click the + in the chat box, choose Add connectors, search exa, and click the plus.",
       {
-        text: "ChatGPT: open the Exa page in the plugin directory and click the plus.",
+        text: "ChatGPT: open the Exa plugin page and click Install plugin.",
         link: { href: "https://chatgpt.com/plugins/exa", label: "Open Exa for ChatGPT" },
       },
       "Start a new chat, so Exa is switched on.",
     ],
-    image: {
-      src: "/workshops/claude/exa-connector.png",
-      width: 1080,
-      height: 676,
-      alt: "Claude's Connectors directory with exa typed in the search box and the Exa result added",
-      caption: "In Claude: search exa, then click the plus.",
-    },
-    art: <ScreenshotPlaceholder label="Exa in ChatGPT's plugin directory" />,
+    image: [
+      {
+        src: "/workshops/claude/exa-connector.png",
+        width: 1080,
+        height: 676,
+        alt: "Claude's Connectors directory with exa typed in the search box and the Exa result added",
+        caption: "In Claude: search exa, then click the plus.",
+      },
+      {
+        src: "/workshops/exa/chatgpt-exa-plugin-page.png",
+        width: 625,
+        height: 480,
+        alt: "The Exa plugin page in ChatGPT, with the Install plugin button next to the name",
+        caption: "In ChatGPT: click Install plugin.",
+      },
+    ],
   },
 
   {
@@ -110,7 +137,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       template:
         "use exa to research {idea}. what do they care about right now? look for posts, talks, interviews and news from the last 3 months. give me 5 specific things, each with a link.",
     },
-    art: <ScreenshotPlaceholder label="The research answer, five things with links" />,
+    art: <ChatArt ask="use exa to research jane doe" reply="5 recent things, with links" assistant={CHAT} />,
     note: "If Exa finds the wrong person, add a detail, like their city or job title.",
   },
   {
@@ -127,7 +154,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       template:
         "using that research, write them a short message, under 100 words. open with one specific thing they did or said recently. i am {idea}. end with one easy question. no flattery, no buzzwords.",
     },
-    art: <ScreenshotPlaceholder label="A short message that opens with something specific" />,
+    art: <ChatArt ask="write them a short message" reply="Hi Jane, your talk last week..." assistant={CHAT} />,
   },
   {
     id: "check-it",
@@ -141,7 +168,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       "Change at least one sentence so it sounds like you.",
       "Send it from your own email or LinkedIn.",
     ],
-    art: <ScreenshotPlaceholder label="A message with its facts checked against the links" />,
+    art: <ChatArt ask="show the link for each fact" reply="1. Her May talk: link ..." assistant={CHAT} />,
     note: "That is job 1. Most people stop at one message a week. Job 2 is how you do twenty.",
   },
 
@@ -168,7 +195,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       template:
         "use exa to find 15 {idea}. for each one give their name, role, company, a link, and one recent thing they said or did. put it in a table.",
     },
-    art: <ScreenshotPlaceholder label="A table of 15 people with links" />,
+    art: <ChatArt ask="use exa to find 15 investors" reply="A table of 15 people..." assistant={CHAT} />,
   },
   {
     id: "work-list",
@@ -180,7 +207,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     copy: {
       text: "rank them by how well they fit what i am asking for, with one line on why. then write a message for the top 5, each opening with something specific to that person, like the one we wrote earlier.",
     },
-    art: <ScreenshotPlaceholder label="The ranked list with five messages" />,
+    art: <ChatArt ask="rank them, write the top 5" reply="1. Best fit, because..." assistant={CHAT} />,
     note: "Check each one like before. Send a few a day, not all at once.",
   },
   {
@@ -195,7 +222,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       text: "turn the table into a csv i can paste into google sheets, with extra columns for status and date contacted.",
     },
     links: [{ href: "https://websets.exa.ai/", label: "Open Exa Websets" }],
-    art: <ScreenshotPlaceholder label="The list in a Google Sheet" />,
+    art: <ChatArt ask="turn the table into a csv" reply="name,role,company,link,status" assistant={CHAT} />,
     note: "Need hundreds of people? Exa Websets builds and checks big lists, and it runs on the same $50 credit.",
   },
 
