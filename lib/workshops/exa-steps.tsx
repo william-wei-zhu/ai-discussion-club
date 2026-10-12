@@ -15,8 +15,8 @@ import type { WorkshopStep } from "./types";
 // account. That is why the $50 code (redeemed on the Billing page) matters.
 //
 // Pictures: the Claude logo (owner-supplied, flattened onto white so the black
-// wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
-// from the website decks, the owner's screenshot of ChatGPT's Plugins page
+// wordmark shows in dark mode), the ChatGPT logo from the website deck, the
+// owner's screenshots of Claude's Connectors and ChatGPT's Plugins pages
 // searched for exa, and the owner-supplied Exa banner. The contact list, the
 // enriched table, the five messages and the check are generated illustrations
 // with no real people (the Exa logo was passed to Higgsfield as a reference).
@@ -113,9 +113,9 @@ export const EXA_STEPS: WorkshopStep[] = [
     imagesSideBySide: true,
     image: [
       {
-        src: "/workshops/claude/exa-connector.png",
-        width: 1080,
-        height: 676,
+        src: "/workshops/exa/claude-exa-connector.png",
+        width: 1362,
+        height: 1204,
         alt: "Claude's Connectors directory with exa typed in the search box and the Exa result added",
       },
       {

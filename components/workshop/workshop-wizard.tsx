@@ -382,9 +382,11 @@ function StepPanel({
         // Vertical centring comes from `justify-center` within each column.
         twoUp
           ? cn(
-              bigMedia
-                ? "lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]"
-                : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
+              sideBySide && bigMedia
+                ? "lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]"
+                : bigMedia
+                  ? "lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]"
+                  : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
               "lg:items-stretch lg:gap-10 xl:gap-14",
             )
           : "lg:grid-cols-1 lg:place-items-center",
@@ -405,7 +407,13 @@ function StepPanel({
             // its own picture (shrinking only if the column runs short), so a
             // short strip does not sit in a half-empty frame. Side by side,
             // each takes half the width at its natural height.
-            <figure key={image.src} className={cn("flex flex-col gap-2 lg:min-h-0", sideBySide ? "min-w-0 sm:flex-1" : images.length > 1 ? "lg:flex-initial" : "lg:flex-1")}>
+            <figure
+              key={image.src}
+              className={cn("flex flex-col gap-2 lg:min-h-0", sideBySide ? "min-w-0 sm:[flex:var(--ws-ratio)_1_0%]" : images.length > 1 ? "lg:flex-initial" : "lg:flex-1")}
+              // Side by side, each picture's share of the width follows its
+              // shape, so a square shot and a wide one end up the same height.
+              style={sideBySide ? ({ "--ws-ratio": image.width / image.height } as React.CSSProperties) : undefined}
+            >
               <div className={cn("flex items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-card p-2 sm:p-3 lg:min-h-0", images.length > 1 ? "lg:flex-initial" : "lg:flex-1")}>
                 <Image
                   src={image.src}
