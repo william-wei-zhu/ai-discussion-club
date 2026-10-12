@@ -2,7 +2,7 @@ import type { WorkshopStep } from "./types";
 
 // The outreach deck: connect Claude or ChatGPT to Exa, then do two jobs.
 // Job 1 builds a list of the right people and saves it as a spreadsheet, in
-// one prompt. Job 2 enriches the top five rows with Exa (background, recent
+// one prompt. Job 2 enriches all ten rows with Exa (background, recent
 // writing, links, needs), writes each of them a message from what they recently
 // said, then checks before sending. List first, so every
 // message has a place to be tracked. Built for a 45-minute room, so it is short
@@ -18,7 +18,7 @@ import type { WorkshopStep } from "./types";
 // wordmark shows in dark mode), the ChatGPT logo from the website deck, the
 // owner's screenshots of Claude's Connectors and ChatGPT's Plugins pages
 // searched for exa, and the owner-supplied Exa banner. The contact list, the
-// enriched table, the five messages and the check are generated illustrations
+// enriched table, the message cards and the check are generated illustrations
 // with no real people (the Exa logo was passed to Higgsfield as a reference).
 // The page passes `bigMedia`, so the text-heavy screenshots get the wider
 // column.
@@ -30,7 +30,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "Reach the right people with Exa",
     lines: [
       "Researching one person well can take 20 minutes. Today Exa does the digging, so you can write to people the way they deserve.",
-      "You will do two jobs: build a list of the right people and save it, then go deep on the top five and write each of them a message they want to answer.",
+      "You will do two jobs: build a list of the right people and save it, then go deep on all ten and write each of them a message they want to answer.",
       "Set aside about 45 minutes and use a laptop. Claude or ChatGPT both work.",
     ],
     image: {
@@ -167,7 +167,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       label: "who are you looking for?",
       placeholder: "angel investors in the DC area",
       template:
-        "use exa to find 15 {idea}. for each one give their name, role, company, a link, and one recent thing they said or did. put it in a table first, then save it as a csv i can paste into google sheets, with extra columns for status and date contacted.",
+        "use exa to find 10 {idea}. for each one give their name, role, company, a link, and one recent thing they said or did. put it in a table first, then save it as a csv i can paste into google sheets, with extra columns for status and date contacted.",
     },
     image: {
       src: "/workshops/exa/contact-list.jpg",
@@ -179,13 +179,13 @@ export const EXA_STEPS: WorkshopStep[] = [
   {
     id: "research-top",
     part: "job 2: reach each person",
-    title: "Go deep on your top five",
+    title: "Go deep on all ten",
     lines: [
-      "Stay in the same chat and let Exa dig into the first five people on your list.",
+      "Stay in the same chat and let Exa dig into all ten people on your list.",
       "It adds what it finds as new columns, so your spreadsheet gets richer instead of you juggling tabs.",
     ],
     copy: {
-      text: "use exa to go deep on the first 5 people on my list. for each person find: their background and education, what they have written, posted or said in the last 3 months (with links), the problems or goals they keep coming back to, and what they might need right now. add these as new columns to the table, then give me the updated csv.",
+      text: "use exa to go deep on all 10 people on my list. for each person find: their background and education, what they have written, posted or said in the last 3 months (with links), the problems or goals they keep coming back to, and what they might need right now. add these as new columns to the table, then give me the updated csv.",
     },
     image: {
       src: "/workshops/exa/enriched-list.jpg",
@@ -201,13 +201,13 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "Write each of them a message",
     lines: [
       "The best opener is something they wrote or said recently, and the problem behind it.",
-      "Say who you are and what you can offer. The line below writes five messages, each from that person's own words, and adds them to your sheet.",
+      "Say who you are and what you can offer. The line below writes ten messages, each from that person's own words, and adds them to your sheet.",
     ],
     idea: {
       label: "who are you, and what can you offer?",
       placeholder: "a founder building an AI tool for small businesses",
       template:
-        "for each of those 5 people, pick the most recent thing they wrote or said, name the problem behind it in their words, and write them a short message, under 100 words: open with that piece, offer one concrete way i can help, and end with one easy question. i am {idea}. no flattery, no buzzwords. add the messages as a new column in the csv.",
+        "for each of those 10 people, pick the most recent thing they wrote or said, name the problem behind it in their words, and write them a short message, under 100 words: open with that piece, offer one concrete way i can help, and end with one easy question. i am {idea}. no flattery, no buzzwords. add the messages as a new column in the csv.",
     },
     image: {
       src: "/workshops/exa/five-messages.jpg",
