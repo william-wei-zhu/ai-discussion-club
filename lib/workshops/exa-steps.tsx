@@ -1,9 +1,11 @@
 import type { WorkshopStep } from "./types";
 
 // The outreach deck: connect Claude or ChatGPT to Exa, then do two jobs.
-// Job 1 researches one person and writes them a message. Job 2 turns that into
-// a list and works through it. Built for a 45-minute room, so it is short and
-// nothing is installed beyond the Exa connector.
+// Job 1 builds a list of the right people, ranks it and saves it as a
+// spreadsheet. Job 2 works down that list: research one person, write a message
+// from what they recently said, check it, then repeat. List first, so every
+// message has a place to be tracked. Built for a 45-minute room, so it is short
+// and nothing is installed beyond the Exa connector.
 //
 // One deck serves both assistants. Only "Add Exa" differs, and it gives both
 // paths. Every prompt is plain English that works in either app.
@@ -13,12 +15,14 @@ import type { WorkshopStep } from "./types";
 //
 // Pictures: the Claude logo (owner-supplied, flattened onto white so the black
 // wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
-// from the website decks, and ChatGPT's Exa plugin page captured from the
-// public chatgpt.com/plugins/exa. Step 3 is the owner-supplied Exa banner.
-// Steps 5, 6 and 8-10 are real screenshots of one Claude chat with Exa that
-// runs this deck's prompts, researching Darius Clair of DC Startup & Tech Week.
-// Step 7 is a generated illustration, since it is generic. The page passes
-// `bigMedia`, so these text-heavy screenshots get the wider column.
+// from the website decks, ChatGPT's Exa plugin page captured from the public
+// chatgpt.com/plugins/exa, and the owner-supplied Exa banner. The ranked list,
+// the CSV, the research prompt and the message are real screenshots of Claude
+// chats with Exa running this deck's prompts (the person researched is Darius
+// Clair of DC Startup & Tech Week). The contact list, the check and the
+// work-down-the-list pictures are generated illustrations with no real people.
+// The page passes `bigMedia`, so the text-heavy screenshots get the wider
+// column.
 
 export const EXA_STEPS: WorkshopStep[] = [
   {
@@ -27,7 +31,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "Reach the right people with Exa",
     lines: [
       "Researching one person well can take 20 minutes. Today Exa does the digging, so you can write to people the way they deserve.",
-      "You will do two jobs: research one person and write them a message they want to answer, then build a list of the right people and work through it.",
+      "You will do two jobs: build a list of the right people and save it, then work down it, writing each person a message they want to answer.",
       "Set aside about 45 minutes and use a laptop. Claude or ChatGPT both work.",
     ],
     image: {
@@ -125,77 +129,11 @@ export const EXA_STEPS: WorkshopStep[] = [
   },
 
   {
-    id: "research-person",
-    part: "job 1: reach one person",
-    title: "Research one person",
-    lines: [
-      "Pick someone you actually want to reach: an investor, a customer, a partner.",
-      "Type their name and where they work. Then copy the line and paste it into your chat.",
-    ],
-    idea: {
-      label: "who do you want to reach?",
-      placeholder: "their name, and where they work",
-      template:
-        "use exa to research {idea}. what do they care about right now? look for posts, talks, interviews and news from the last 3 months. give me 5 specific things, each with a link.",
-    },
-    image: {
-      src: "/workshops/exa/research-answer.png",
-      width: 1456,
-      height: 718,
-      alt: "Claude, using Exa, corrects the person's title and lists what they are working on right now",
-      caption: "It searches with Exa and comes back with what they are up to.",
-    },
-    note: "If Exa finds the wrong person, add a detail, like their city or job title.",
-  },
-  {
-    id: "write-message",
-    part: "job 1: reach one person",
-    title: "Write a message they want to answer",
-    lines: [
-      "Stay in the same chat, so it remembers the research.",
-      "Say who you are and what you want from them. The line below does the rest.",
-    ],
-    idea: {
-      label: "who are you, and what are you asking for?",
-      placeholder: "a founder looking for a 20 minute call",
-      template:
-        "using that research, write them a short message, under 100 words. open with one specific thing they did or said recently. i am {idea}. end with one easy question. no flattery, no buzzwords.",
-    },
-    image: {
-      src: "/workshops/exa/message-draft.png",
-      width: 1568,
-      height: 673,
-      alt: "A short message that opens with a point from an article the person wrote, then asks for a 20 minute call",
-      caption: "A real draft: specific opening, clear ask, one easy question.",
-    },
-  },
-  {
-    id: "check-it",
-    part: "job 1: reach one person",
-    title: "Check it before you send",
-    lines: [
-      "AI can get a detail wrong, and a wrong detail is worse than none.",
-    ],
-    bullets: [
-      "Click two of the links and make sure the facts are real.",
-      "Change at least one sentence so it sounds like you.",
-      "Send it from your own email or LinkedIn.",
-    ],
-    image: {
-      src: "/workshops/exa/check-it.jpg",
-      width: 1500,
-      height: 996,
-      alt: "An illustration of someone checking a drafted message with a magnifying glass, with two links ticked",
-    },
-    note: "In our test, the research corrected our own prompt: the person had a different title than we typed. That is why you check.",
-  },
-
-  {
     id: "find-list",
-    part: "job 2: build a pipeline",
-    title: "Build a list of the right people",
+    part: "job 1: build your list",
+    title: "Find the right people",
     lines: [
-      "Describe who you are looking for, or roll an example. Then copy the line into your chat.",
+      "Describe who you are looking for, or roll an example. Then copy the line into a new chat.",
       "The more specific you are, the better the list.",
     ],
     ideas: [
@@ -215,42 +153,43 @@ export const EXA_STEPS: WorkshopStep[] = [
         "use exa to find 15 {idea}. for each one give their name, role, company, a link, and one recent thing they said or did. put it in a table.",
     },
     image: {
-      src: "/workshops/exa/people-table.png",
-      width: 1568,
-      height: 701,
-      alt: "A table of investors with name, role, company, a link, and a recent thing each one said or did",
-      caption: "The first rows of a 15 person table.",
+      src: "/workshops/exa/contact-list.jpg",
+      width: 1000,
+      height: 960,
+      alt: "An illustration of a contact list found with Exa: faceless avatars, a link for each person, and a status for each row",
     },
   },
   {
-    id: "work-list",
-    part: "job 2: build a pipeline",
-    title: "Work through it, one person at a time",
+    id: "rank-list",
+    part: "job 1: build your list",
+    title: "Put the best fits first",
     lines: [
-      "A list is only useful if every message still feels personal. Let the AI sort the list, then write each one from that person's own news.",
+      "Tell it what you are asking for, and let it sort the list so you start with the people most likely to say yes.",
     ],
-    copy: {
-      text: "rank them by how well they fit what i am asking for, with one line on why. then write a message for the top 5, each opening with something specific to that person, like the one we wrote earlier.",
+    idea: {
+      label: "what are you asking them for?",
+      placeholder: "a 20 minute call about my AI tool for small businesses",
+      template:
+        "rank them by how well they fit what i am asking for: {idea}. give one line on why for each.",
     },
     image: {
       src: "/workshops/exa/ranked-list.png",
       width: 1529,
       height: 546,
       alt: "The list ranked by fit, with one line on why each person is a good match",
-      caption: "Ranked by fit, each with a reason. The five messages follow below it.",
+      caption: "Ranked by fit, each with a reason.",
     },
-    note: "Check each one like before. Send a few a day, not all at once.",
   },
   {
-    id: "keep-list",
-    part: "job 2: build a pipeline",
-    title: "Keep your list",
+    id: "save-list",
+    part: "job 1: build your list",
+    title: "Save it as a spreadsheet",
     lines: [
-      "Put the list somewhere you will see it again, so you can follow up.",
-      "Paste the result into a new Google Sheet. Fill in status as people reply.",
+      "A list you can see again is a list you will follow up on.",
+      "Paste the result into a new Google Sheet. You will fill in status as you go.",
     ],
     copy: {
-      text: "turn the table into a csv i can paste into google sheets, with extra columns for status and date contacted.",
+      text: "turn the ranked list into a csv i can paste into google sheets, with extra columns for status and date contacted.",
     },
     links: [{ href: "https://websets.exa.ai/", label: "Open Exa Websets" }],
     image: {
@@ -264,12 +203,95 @@ export const EXA_STEPS: WorkshopStep[] = [
   },
 
   {
+    id: "research-person",
+    part: "job 2: reach each person",
+    title: "Research the first person",
+    lines: [
+      "Start at the top of your list. Type their name and their role, then copy the line into your chat.",
+    ],
+    idea: {
+      label: "who is first on your list?",
+      placeholder: "their name, and their role",
+      template:
+        "use exa to research {idea}. what do they care about right now? look for posts, talks, interviews and news from the last 3 months. give me 5 specific things, each with a link.",
+    },
+    image: {
+      src: "/workshops/exa/research-prompt.png",
+      width: 1004,
+      height: 666,
+      alt: "The research prompt typed into the Claude chat box, naming the person and their role",
+      caption: "Paste the line in and send it.",
+    },
+    note: "If Exa finds the wrong person, add a detail, like their city or company.",
+  },
+  {
+    id: "write-message",
+    part: "job 2: reach each person",
+    title: "Write from what they just said",
+    lines: [
+      "The best opener is something they wrote or said recently, and the problem behind it. Stay in the same chat, so it remembers the research.",
+      "Say who you are and what you can offer. The line below finds the angle where you can help.",
+    ],
+    idea: {
+      label: "who are you, and what can you offer?",
+      placeholder: "a founder building an AI tool for small businesses",
+      template:
+        "from that research, pick the most recent thing they wrote or said. what problem or goal is behind it, and how could someone like me help with it? i am {idea}. then write them a short message, under 100 words: open with that piece, name the problem in their words, offer one concrete way i can help, and end with one easy question. no flattery, no buzzwords.",
+    },
+    image: {
+      src: "/workshops/exa/message-angle.png",
+      width: 1568,
+      height: 575,
+      alt: "A short message that opens with a line the person wrote, names the problem in their words, and offers a free hands-on session",
+      caption: "A real draft: their words, their problem, one concrete offer, one easy question.",
+    },
+  },
+  {
+    id: "check-it",
+    part: "job 2: reach each person",
+    title: "Check it before you send",
+    lines: [
+      "AI can get a detail wrong, and a wrong detail is worse than none.",
+    ],
+    bullets: [
+      "Click two of the links and make sure the facts are real.",
+      "Change at least one sentence so it sounds like you.",
+      "Send it from your own email or LinkedIn, then mark them contacted in your sheet.",
+    ],
+    image: {
+      src: "/workshops/exa/check-it.jpg",
+      width: 1500,
+      height: 996,
+      alt: "An illustration of someone checking a drafted message with a magnifying glass, with two links ticked",
+    },
+    note: "In our first test, the research corrected our own prompt: the person had a different title than we typed. That is why you check.",
+  },
+  {
+    id: "next-person",
+    part: "job 2: reach each person",
+    title: "Work down the list",
+    lines: [
+      "Do the same for the next few people. Each message still starts from that person's own news, so none of them feel copied.",
+    ],
+    copy: {
+      text: "now do the same for the next 4 people on my list. research each one with exa, then write each a message the same way. put each message under their name.",
+    },
+    image: {
+      src: "/workshops/exa/next-person.jpg",
+      width: 1500,
+      height: 996,
+      alt: "An illustration of a contact list with the first two people ticked off and a personal message going out to the third",
+    },
+    note: "Check each one like before. Send a few a day, not all at once, and update the status column as people reply.",
+  },
+
+  {
     id: "finish",
     part: "the finish line",
-    title: "You have a setup and a list",
+    title: "You have a list and a way to work it",
     lines: [
       "Your assistant now searches with Exa, and it will keep doing that after today.",
-      "You have one message ready to send, a list of the right people, and a way to work through it without losing the personal touch.",
+      "You have a ranked list of the right people in a spreadsheet, and a message ready for the first of them that starts from what they care about.",
       "Come back to the club and tell us who wrote back.",
     ],
     links: [{ href: "https://luma.com/ai-discussion-club", label: "See upcoming events" }],
