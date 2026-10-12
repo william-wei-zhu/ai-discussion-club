@@ -15,8 +15,8 @@ import type { WorkshopStep } from "./types";
 //
 // Pictures: the Claude logo (owner-supplied, flattened onto white so the black
 // wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
-// from the website decks, ChatGPT's Exa plugin page captured from the public
-// chatgpt.com/plugins/exa, and the owner-supplied Exa banner. The ranked list,
+// from the website decks, the owner's screenshot of ChatGPT's Plugins page
+// searched for exa, and the owner-supplied Exa banner. The ranked list,
 // the CSV, the research prompt and the message are real screenshots of Claude
 // chats with Exa running this deck's prompts (the person researched is Darius
 // Clair of DC Startup & Tech Week). The contact list, the check and the
@@ -106,7 +106,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     bullets: [
       "Claude: click the + in the chat box, choose Add connectors, search exa, and click the plus.",
       {
-        text: "ChatGPT: open the Exa plugin page and click Install plugin.",
+        text: "ChatGPT: click the Plugins icon in the left sidebar, search exa, and add it.",
         link: { href: "https://chatgpt.com/plugins/exa", label: "Open Exa for ChatGPT" },
       },
       "Start a new chat, so Exa is switched on.",
@@ -120,10 +120,10 @@ export const EXA_STEPS: WorkshopStep[] = [
         alt: "Claude's Connectors directory with exa typed in the search box and the Exa result added",
       },
       {
-        src: "/workshops/exa/chatgpt-exa-plugin-page.png",
-        width: 625,
-        height: 480,
-        alt: "The Exa plugin page in ChatGPT, with the Install plugin button next to the name",
+        src: "/workshops/exa/chatgpt-exa-plugins.png",
+        width: 1036,
+        height: 590,
+        alt: "The Plugins page in the ChatGPT app with exa typed in the search box and the Exa plugin listed",
       },
     ],
   },
