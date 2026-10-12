@@ -65,3 +65,4 @@ Scaling: the inherited admin/matcher loads club contacts in memory at current ~1
 2026-10-11: Exa deck step 4 Claude picture is now the owner-supplied `exa/claude-exa-connector.png` (1362x1204; the website decks still use `claude/exa-connector.png`). Side-by-side images now share the row in proportion to their aspect ratios (`--ws-ratio` custom property, `sm:[flex:var(--ws-ratio)_1_0%]`) so they end up the same height, and a side-by-side step on a `bigMedia` deck gets a 2.2fr picture column to the text's 1fr.
 2026-10-11: Exa deck step 5 no longer mentions Exa Websets (button and note removed at the owner's request).
 2026-10-11: Exa deck list size is 10 (step 5 finds 10), and steps 6 and 7 cover all 10 (step 6 title "Go deep on all ten"). Earlier notes saying 15 people or top five are superseded.
+2026-10-11: Exa deck last slide ("Want more?") is now two-column with the site's `/brand/preview.png` (DC skyline, "Make DC the City for Innovators") as its picture.

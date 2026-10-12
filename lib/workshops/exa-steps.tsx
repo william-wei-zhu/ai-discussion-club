@@ -245,6 +245,11 @@ export const EXA_STEPS: WorkshopStep[] = [
       "For more workshops like this one, and our upcoming events, head to the AI Discussion Club homepage.",
     ],
     links: [{ href: "/", label: "Go to AI Discussion Club" }],
-    wide: true,
+    image: {
+      src: "/brand/preview.png",
+      width: 2299,
+      height: 1294,
+      alt: "Make DC the City for Innovators: the Washington skyline in cherry blossom season",
+    },
   },
 ];
