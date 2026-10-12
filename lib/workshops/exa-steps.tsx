@@ -103,7 +103,10 @@ export const EXA_STEPS: WorkshopStep[] = [
       "Follow the path for the app you use. When it asks you to sign in to Exa, use the account you just made.",
     ],
     bullets: [
-      "Claude: click the + in the chat box, choose Add connectors, search exa, and click the plus.",
+      {
+        text: "Claude: click the + in the chat box, choose Add connectors, search exa, and click the plus.",
+        link: { href: "https://claude.ai/directory/exa", label: "Open Exa for Claude" },
+      },
       {
         text: "ChatGPT: click the Plugins icon in the left sidebar, search exa, and add it.",
         link: { href: "https://chatgpt.com/plugins/exa", label: "Open Exa for ChatGPT" },
