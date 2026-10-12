@@ -1,8 +1,8 @@
 import type { WorkshopStep } from "./types";
 
 // The outreach deck: connect Claude or ChatGPT to Exa, then do two jobs.
-// Job 1 builds a list of the right people, ranks it and saves it as a
-// spreadsheet. Job 2 works down that list: research one person, write a message
+// Job 1 builds a list of the right people and saves it as a spreadsheet, in
+// one prompt. Job 2 works down that list: research one person, write a message
 // from what they recently said, check it, then repeat. List first, so every
 // message has a place to be tracked. Built for a 45-minute room, so it is short
 // and nothing is installed beyond the Exa connector.
@@ -16,9 +16,8 @@ import type { WorkshopStep } from "./types";
 // Pictures: the Claude logo (owner-supplied, flattened onto white so the black
 // wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
 // from the website decks, the owner's screenshot of ChatGPT's Plugins page
-// searched for exa, and the owner-supplied Exa banner. The ranked list,
-// the CSV, the research prompt and the message are real screenshots of Claude
-// chats with Exa running this deck's prompts (the person researched is Darius
+// searched for exa, and the owner-supplied Exa banner. The research prompt
+// and the message are real screenshots of Claude chats with Exa running this deck's prompts (the person researched is Darius
 // Clair of DC Startup & Tech Week). The contact list, the check and the
 // work-down-the-list pictures are generated illustrations with no real people.
 // The page passes `bigMedia`, so the text-heavy screenshots get the wider
@@ -134,7 +133,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "Find the right people",
     lines: [
       "Describe who you are looking for, or roll an example. Then copy the line into a new chat.",
-      "The more specific you are, the better the list.",
+      "It finds the people, puts them in a table, and turns the table into a spreadsheet file. Paste that into a new Google Sheet, and fill in status as you go.",
     ],
     ideas: [
       "angel investors in the DC area who back early-stage startups",
@@ -166,7 +165,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       label: "who are you looking for?",
       placeholder: "angel investors in the DC area",
       template:
-        "use exa to find 15 {idea}. for each one give their name, role, company, a link, and one recent thing they said or did. put it in a table.",
+        "use exa to find 15 {idea}. for each one give their name, role, company, a link, and one recent thing they said or did. put it in a table first, then save it as a csv i can paste into google sheets, with extra columns for status and date contacted.",
     },
     image: {
       src: "/workshops/exa/contact-list.jpg",
@@ -174,50 +173,9 @@ export const EXA_STEPS: WorkshopStep[] = [
       height: 960,
       alt: "An illustration of a contact list found with Exa: faceless avatars, a link for each person, and a status for each row",
     },
-  },
-  {
-    id: "rank-list",
-    part: "job 1: build your list",
-    title: "Put the best fits first",
-    lines: [
-      "Tell it what you are asking for, and let it sort the list so you start with the people most likely to say yes.",
-    ],
-    idea: {
-      label: "what are you asking them for?",
-      placeholder: "a 20 minute call about my AI tool for small businesses",
-      template:
-        "rank them by how well they fit what i am asking for: {idea}. give one line on why for each.",
-    },
-    image: {
-      src: "/workshops/exa/ranked-list.png",
-      width: 1529,
-      height: 546,
-      alt: "The list ranked by fit, with one line on why each person is a good match",
-      caption: "Ranked by fit, each with a reason.",
-    },
-  },
-  {
-    id: "save-list",
-    part: "job 1: build your list",
-    title: "Save it as a spreadsheet",
-    lines: [
-      "A list you can see again is a list you will follow up on.",
-      "Paste the result into a new Google Sheet. You will fill in status as you go.",
-    ],
-    copy: {
-      text: "turn the ranked list into a csv i can paste into google sheets, with extra columns for status and date contacted.",
-    },
     links: [{ href: "https://websets.exa.ai/", label: "Open Exa Websets" }],
-    image: {
-      src: "/workshops/exa/list-csv.png",
-      width: 1568,
-      height: 515,
-      alt: "The list as CSV text with columns for rank, name, role, company, link, status and date contacted",
-      caption: "Copy it, then paste into cell A1 of a new Google Sheet.",
-    },
     note: "Need hundreds of people? Exa Websets builds and checks big lists, and it runs on the same $50 credit.",
   },
-
   {
     id: "research-person",
     part: "job 2: reach each person",
@@ -307,7 +265,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "You have a list and a way to work it",
     lines: [
       "Your assistant now searches with Exa, and it will keep doing that after today.",
-      "You have a ranked list of the right people in a spreadsheet, and a message ready for the first of them that starts from what they care about.",
+      "You have a list of the right people in a spreadsheet, and a message ready for the first of them that starts from what they care about.",
       "Come back to the club and tell us who wrote back.",
     ],
     links: [{ href: "https://luma.com/ai-discussion-club", label: "See upcoming events" }],
