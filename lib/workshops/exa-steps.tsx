@@ -181,7 +181,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     part: "job 2: reach each person",
     title: "Go deep on your top five",
     lines: [
-      "Your list already has names, so there is nothing to type. Stay in the same chat and let Exa dig into the first five people on it.",
+      "Stay in the same chat and let Exa dig into the first five people on your list.",
       "It adds what it finds as new columns, so your spreadsheet gets richer instead of you juggling tabs.",
     ],
     copy: {
