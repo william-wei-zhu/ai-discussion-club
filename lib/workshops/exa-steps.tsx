@@ -173,8 +173,6 @@ export const EXA_STEPS: WorkshopStep[] = [
       height: 960,
       alt: "An illustration of a contact list found with Exa: faceless avatars, a link for each person, and a status for each row",
     },
-    links: [{ href: "https://websets.exa.ai/", label: "Open Exa Websets" }],
-    note: "Need hundreds of people? Exa Websets builds and checks big lists, and it runs on the same $50 credit.",
   },
   {
     id: "research-top",
