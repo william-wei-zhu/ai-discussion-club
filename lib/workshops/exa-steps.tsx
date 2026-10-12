@@ -133,7 +133,6 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "Find the right people",
     lines: [
       "Describe who you are looking for, or roll an example. Then copy the line into a new chat.",
-      "It finds the people, puts them in a table, and turns the table into a spreadsheet file. Paste that into a new Google Sheet, and fill in status as you go.",
     ],
     ideas: [
       "angel investors in the DC area who back early-stage startups",
