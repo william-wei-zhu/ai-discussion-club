@@ -143,6 +143,7 @@
    phones the steps stack and scroll normally). */
 @media(min-width:64rem){body.ws-deck .site-footer{display:none}}
 /* Projected: the stage owns the whole screen, with no site chrome to subtract. */
+@media(min-width:64rem){.ws-slide.ws-big{width:min(1560px,calc(100% - 96px))}}
 .ws-slide:fullscreen{width:100%;max-width:none;height:100dvh;padding-inline:5vw;background:var(--background)}
 /* Workshop gallery form (finish slide) and the /workshops/submissions list. */
 .ws-submit{display:flex;flex-direction:column;gap:16px;padding:22px 24px;border:2px solid var(--accent);border-radius:22px;background:var(--tint)}

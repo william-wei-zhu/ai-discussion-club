@@ -20,5 +20,5 @@ export const metadata: Metadata = {
 // Same shape as the website decks: no page hero, step 1 is the title slide.
 // One deck for both assistants, so the copy boxes name both.
 export default function ExaWorkshopPage() {
-  return <WorkshopWizard workshop="reach-the-right-people-with-exa" steps={EXA_STEPS} storageKey="adc-workshop-exa-step" assistant="Claude or ChatGPT" />;
+  return <WorkshopWizard workshop="reach-the-right-people-with-exa" steps={EXA_STEPS} storageKey="adc-workshop-exa-step" assistant="Claude or ChatGPT" bigMedia />;
 }

@@ -14,11 +14,11 @@ import type { WorkshopStep } from "./types";
 // Pictures: the Claude logo (owner-supplied, flattened onto white so the black
 // wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
 // from the website decks, and ChatGPT's Exa plugin page captured from the
-// public chatgpt.com/plugins/exa. Steps 3, 5, 6 and 8-10
-// are real screenshots: the Exa Billing coupon box (cropped to keep the
-// account's balance and card out) and one Claude chat with Exa that runs this
-// deck's prompts, researching Darius Clair of DC Startup & Tech Week. Step 7 is
-// a generated illustration, since it is generic.
+// public chatgpt.com/plugins/exa. Step 3 is the owner-supplied Exa banner.
+// Steps 5, 6 and 8-10 are real screenshots of one Claude chat with Exa that
+// runs this deck's prompts, researching Darius Clair of DC Startup & Tech Week.
+// Step 7 is a generated illustration, since it is generic. The page passes
+// `bigMedia`, so these text-heavy screenshots get the wider column.
 
 export const EXA_STEPS: WorkshopStep[] = [
   {
@@ -85,11 +85,10 @@ export const EXA_STEPS: WorkshopStep[] = [
     ],
     copy: { text: "EXA50DCSTARTUP", label: "your $50 code" },
     image: {
-      src: "/workshops/exa/exa-coupon-box.png",
-      width: 900,
-      height: 125,
-      alt: "The coupon box on the Exa Billing page: Enter coupon code, and a Redeem button",
-      caption: "Paste the code into the coupon box, then click Redeem.",
+      src: "/workshops/exa/exa-banner.jpg",
+      width: 1600,
+      height: 1056,
+      alt: "Exa: the world's data for AI agents",
     },
     note: "Every attendee gets $50 of Exa credit. It stays on your account after today.",
   },
@@ -114,7 +113,6 @@ export const EXA_STEPS: WorkshopStep[] = [
         width: 1080,
         height: 676,
         alt: "Claude's Connectors directory with exa typed in the search box and the Exa result added",
-        caption: "In Claude: search exa, then click the plus.",
       },
       {
         src: "/workshops/exa/chatgpt-exa-plugin-page.png",

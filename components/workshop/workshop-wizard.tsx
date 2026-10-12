@@ -37,12 +37,17 @@ export function WorkshopWizard({
   steps,
   storageKey,
   assistant = "Claude",
+  bigMedia = false,
 }: {
   workshop: string;
   steps: WorkshopStep[];
   storageKey: string;
   // Who the reader is typing to, for the "type this to ..." copy boxes.
   assistant?: string;
+  // For decks whose pictures are wide screenshots full of text: on a laptop the
+  // slide grows past the usual 1240px and the picture takes the bigger column,
+  // so the screenshots can be read from the back of a room.
+  bigMedia?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [restored, setRestored] = useState(false);
@@ -230,7 +235,10 @@ export function WorkshopWizard({
   return (
     <div
       ref={stageRef}
-      className="ws-slide wrap pb-16 lg:flex lg:h-[calc(100dvh-var(--ws-chrome,6.6rem))] lg:flex-col lg:overflow-hidden lg:pb-0"
+      className={cn(
+        "ws-slide wrap pb-16 lg:flex lg:h-[calc(100dvh-var(--ws-chrome,6.6rem))] lg:flex-col lg:overflow-hidden lg:pb-0",
+        bigMedia && "ws-big",
+      )}
     >
       {/* Where am I, how much is left */}
       <div className="shrink-0 py-3 lg:py-4">
@@ -321,6 +329,7 @@ export function WorkshopWizard({
           headingRef={i === index ? headingRef : undefined}
           workshop={workshop}
           assistant={assistant}
+          bigMedia={bigMedia}
           onNext={() => go(i + 1)}
           onBack={() => go(i - 1)}
         />
@@ -337,6 +346,7 @@ function StepPanel({
   headingRef,
   workshop,
   assistant,
+  bigMedia,
   onNext,
   onBack,
 }: {
@@ -347,6 +357,7 @@ function StepPanel({
   headingRef?: React.RefObject<HTMLHeadingElement | null>;
   workshop: string;
   assistant: string;
+  bigMedia: boolean;
   onNext: () => void;
   onBack: () => void;
 }) {
@@ -368,7 +379,12 @@ function StepPanel({
         // (which is how the picture shrinks to fit) would collapse to auto.
         // Vertical centring comes from `justify-center` within each column.
         twoUp
-          ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-stretch lg:gap-10 xl:gap-14"
+          ? cn(
+              bigMedia
+                ? "lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]"
+                : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]",
+              "lg:items-stretch lg:gap-10 xl:gap-14",
+            )
           : "lg:grid-cols-1 lg:place-items-center",
       )}
     >
@@ -392,7 +408,7 @@ function StepPanel({
                   alt={image.alt}
                   width={image.width}
                   height={image.height}
-                  sizes="(max-width: 1024px) 100vw, 600px"
+                  sizes={bigMedia ? "(max-width: 1024px) 100vw, 960px" : "(max-width: 1024px) 100vw, 600px"}
                   // On a slide the picture fills its box exactly and letterboxes
                   // inside it. A flex item's default `min-width: auto` is the
                   // intrinsic width, so a max-width alone would leave the tall
