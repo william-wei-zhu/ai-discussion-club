@@ -41,6 +41,9 @@ export type WorkshopStep = {
   // One screenshot, or a short sequence of them stacked top to bottom in the
   // picture column (they share its height, each with its own caption).
   image?: WorkshopImage | WorkshopImage[];
+  // Lay an image array out left and right (stacked on phones) instead of top to
+  // bottom, for two pictures that are alternatives rather than a sequence.
+  imagesSideBySide?: boolean;
   art?: ReactNode;
   // A smaller aside. Rides in the left column on a two-column slide, since it
   // is secondary and moving it is what keeps the instruction column short.

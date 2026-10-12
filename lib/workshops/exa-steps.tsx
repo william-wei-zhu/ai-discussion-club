@@ -111,6 +111,7 @@ export const EXA_STEPS: WorkshopStep[] = [
       },
       "Start a new chat, so Exa is switched on.",
     ],
+    imagesSideBySide: true,
     image: [
       {
         src: "/workshops/claude/exa-connector.png",
@@ -123,7 +124,6 @@ export const EXA_STEPS: WorkshopStep[] = [
         width: 625,
         height: 480,
         alt: "The Exa plugin page in ChatGPT, with the Install plugin button next to the name",
-        caption: "In ChatGPT: click Install plugin.",
       },
     ],
   },
