@@ -571,18 +571,25 @@ function StepPanel({
 function LinkRow({ links }: { links: { href: string; label: string }[] }) {
   return (
     <div className="flex shrink-0 flex-wrap gap-2.5">
-      {links.map((l) => (
-        <a
-          key={l.href}
-          href={l.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="button secondary ws-link"
-        >
-          {l.label}
-          <ExternalLink className="h-4 w-4 shrink-0" />
-        </a>
-      ))}
+      {links.map((l) =>
+        // A path on this site opens in place; anything else is another site.
+        l.href.startsWith("/") ? (
+          <Link key={l.href} href={l.href} className="button secondary ws-link">
+            {l.label}
+          </Link>
+        ) : (
+          <a
+            key={l.href}
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="button secondary ws-link"
+          >
+            {l.label}
+            <ExternalLink className="h-4 w-4 shrink-0" />
+          </a>
+        ),
+      )}
     </div>
   );
 }

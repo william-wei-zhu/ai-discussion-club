@@ -2,8 +2,9 @@ import type { WorkshopStep } from "./types";
 
 // The outreach deck: connect Claude or ChatGPT to Exa, then do two jobs.
 // Job 1 builds a list of the right people and saves it as a spreadsheet, in
-// one prompt. Job 2 works down that list: research one person, write a message
-// from what they recently said, check it, then repeat. List first, so every
+// one prompt. Job 2 enriches the top five rows with Exa (background, recent
+// writing, links, needs), writes each of them a message from what they recently
+// said, then checks before sending. List first, so every
 // message has a place to be tracked. Built for a 45-minute room, so it is short
 // and nothing is installed beyond the Exa connector.
 //
@@ -16,10 +17,9 @@ import type { WorkshopStep } from "./types";
 // Pictures: the Claude logo (owner-supplied, flattened onto white so the black
 // wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
 // from the website decks, the owner's screenshot of ChatGPT's Plugins page
-// searched for exa, and the owner-supplied Exa banner. The research prompt
-// and the message are real screenshots of Claude chats with Exa running this deck's prompts (the person researched is Darius
-// Clair of DC Startup & Tech Week). The contact list, the check and the
-// work-down-the-list pictures are generated illustrations with no real people.
+// searched for exa, and the owner-supplied Exa banner. The contact list, the
+// enriched table, the five messages and the check are generated illustrations
+// with no real people (the Exa logo was passed to Higgsfield as a reference).
 // The page passes `bigMedia`, so the text-heavy screenshots get the wider
 // column.
 
@@ -30,7 +30,7 @@ export const EXA_STEPS: WorkshopStep[] = [
     title: "Reach the right people with Exa",
     lines: [
       "Researching one person well can take 20 minutes. Today Exa does the digging, so you can write to people the way they deserve.",
-      "You will do two jobs: build a list of the right people and save it, then work down it, writing each person a message they want to answer.",
+      "You will do two jobs: build a list of the right people and save it, then go deep on the top five and write each of them a message they want to answer.",
       "Set aside about 45 minutes and use a laptop. Claude or ChatGPT both work.",
     ],
     image: {
@@ -177,47 +177,43 @@ export const EXA_STEPS: WorkshopStep[] = [
     note: "Need hundreds of people? Exa Websets builds and checks big lists, and it runs on the same $50 credit.",
   },
   {
-    id: "research-person",
+    id: "research-top",
     part: "job 2: reach each person",
-    title: "Research the first person",
+    title: "Go deep on your top five",
     lines: [
-      "Start at the top of your list. Type their name and their role, then copy the line into your chat.",
+      "Your list already has names, so there is nothing to type. Stay in the same chat and let Exa dig into the first five people on it.",
+      "It adds what it finds as new columns, so your spreadsheet gets richer instead of you juggling tabs.",
     ],
-    idea: {
-      label: "who is first on your list?",
-      placeholder: "their name, and their role",
-      template:
-        "use exa to research {idea}. what do they care about right now? look for posts, talks, interviews and news from the last 3 months. give me 5 specific things, each with a link.",
+    copy: {
+      text: "use exa to go deep on the first 5 people on my list. for each person find: their background and education, what they have written, posted or said in the last 3 months (with links), the problems or goals they keep coming back to, and what they might need right now. add these as new columns to the table, then give me the updated csv.",
     },
     image: {
-      src: "/workshops/exa/research-prompt.png",
-      width: 1004,
-      height: 666,
-      alt: "The research prompt typed into the Claude chat box, naming the person and their role",
-      caption: "Paste the line in and send it.",
+      src: "/workshops/exa/enriched-list.jpg",
+      width: 1500,
+      height: 996,
+      alt: "An illustration of an Exa contact table gaining new columns for background, writing, links and needs",
     },
-    note: "If Exa finds the wrong person, add a detail, like their city or company.",
+    note: "If Exa mixes someone up with a person of the same name, tell it their company or city and ask it to redo that row.",
   },
   {
-    id: "write-message",
+    id: "write-messages",
     part: "job 2: reach each person",
-    title: "Write from what they just said",
+    title: "Write each of them a message",
     lines: [
-      "The best opener is something they wrote or said recently, and the problem behind it. Stay in the same chat, so it remembers the research.",
-      "Say who you are and what you can offer. The line below finds the angle where you can help.",
+      "The best opener is something they wrote or said recently, and the problem behind it.",
+      "Say who you are and what you can offer. The line below writes five messages, each from that person's own words, and adds them to your sheet.",
     ],
     idea: {
       label: "who are you, and what can you offer?",
       placeholder: "a founder building an AI tool for small businesses",
       template:
-        "from that research, pick the most recent thing they wrote or said. what problem or goal is behind it, and how could someone like me help with it? i am {idea}. then write them a short message, under 100 words: open with that piece, name the problem in their words, offer one concrete way i can help, and end with one easy question. no flattery, no buzzwords.",
+        "for each of those 5 people, pick the most recent thing they wrote or said, name the problem behind it in their words, and write them a short message, under 100 words: open with that piece, offer one concrete way i can help, and end with one easy question. i am {idea}. no flattery, no buzzwords. add the messages as a new column in the csv.",
     },
     image: {
-      src: "/workshops/exa/message-angle.png",
-      width: 1568,
-      height: 575,
-      alt: "A short message that opens with a line the person wrote, names the problem in their words, and offers a free hands-on session",
-      caption: "A real draft: their words, their problem, one concrete offer, one easy question.",
+      src: "/workshops/exa/five-messages.jpg",
+      width: 1500,
+      height: 996,
+      alt: "An illustration of five message cards, each starting from a different person's own words",
     },
   },
   {
@@ -228,9 +224,9 @@ export const EXA_STEPS: WorkshopStep[] = [
       "AI can get a detail wrong, and a wrong detail is worse than none.",
     ],
     bullets: [
-      "Click two of the links and make sure the facts are real.",
+      "For each message, click a link or two and make sure the facts are real.",
       "Change at least one sentence so it sounds like you.",
-      "Send it from your own email or LinkedIn, then mark them contacted in your sheet.",
+      "Send from your own email or LinkedIn, a few a day, and mark each one contacted in your sheet.",
     ],
     image: {
       src: "/workshops/exa/check-it.jpg",
@@ -240,35 +236,15 @@ export const EXA_STEPS: WorkshopStep[] = [
     },
     note: "In our first test, the research corrected our own prompt: the person had a different title than we typed. That is why you check.",
   },
-  {
-    id: "next-person",
-    part: "job 2: reach each person",
-    title: "Work down the list",
-    lines: [
-      "Do the same for the next few people. Each message still starts from that person's own news, so none of them feel copied.",
-    ],
-    copy: {
-      text: "now do the same for the next 4 people on my list. research each one with exa, then write each a message the same way. put each message under their name.",
-    },
-    image: {
-      src: "/workshops/exa/next-person.jpg",
-      width: 1500,
-      height: 996,
-      alt: "An illustration of a contact list with the first two people ticked off and a personal message going out to the third",
-    },
-    note: "Check each one like before. Send a few a day, not all at once, and update the status column as people reply.",
-  },
 
   {
-    id: "finish",
+    id: "more",
     part: "the finish line",
-    title: "You have a list and a way to work it",
+    title: "Want more?",
     lines: [
-      "Your assistant now searches with Exa, and it will keep doing that after today.",
-      "You have a list of the right people in a spreadsheet, and a message ready for the first of them that starts from what they care about.",
-      "Come back to the club and tell us who wrote back.",
+      "For more workshops like this one, and our upcoming events, head to the AI Discussion Club homepage.",
     ],
-    links: [{ href: "https://luma.com/ai-discussion-club", label: "See upcoming events" }],
+    links: [{ href: "/", label: "Go to AI Discussion Club" }],
     wide: true,
   },
 ];
