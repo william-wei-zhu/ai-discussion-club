@@ -11,10 +11,10 @@ import type { WorkshopStep } from "./types";
 // Exa signs people in when they add it, so searches bill to their own Exa
 // account. That is why the $50 code (redeemed on the Billing page) matters.
 //
-// Pictures: the Claude logo (owner-supplied) and the ChatGPT logo from the
-// website decks,
-// Claude's Exa connector from the Claude deck, and ChatGPT's Exa plugin page
-// was captured from the public chatgpt.com/plugins/exa. Steps 3, 5, 6 and 8-10
+// Pictures: the Claude logo (owner-supplied, flattened onto white so the black
+// wordmark shows in dark mode), the ChatGPT logo and Claude's Exa connector
+// from the website decks, and ChatGPT's Exa plugin page captured from the
+// public chatgpt.com/plugins/exa. Steps 3, 5, 6 and 8-10
 // are real screenshots: the Exa Billing coupon box (cropped to keep the
 // account's balance and card out) and one Claude chat with Exa that runs this
 // deck's prompts, researching Darius Clair of DC Startup & Tech Week. Step 7 is
@@ -53,8 +53,8 @@ export const EXA_STEPS: WorkshopStep[] = [
     image: [
       {
         src: "/workshops/exa/claude-logo.png",
-        width: 1280,
-        height: 275,
+        width: 1400,
+        height: 395,
         alt: "The Claude logo",
         caption: "Claude: the same account you use on claude.ai.",
       },
