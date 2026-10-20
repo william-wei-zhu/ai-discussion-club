@@ -91,7 +91,7 @@
 
 @media(max-width:900px){.spotlight{grid-template-columns:minmax(0,280px) 1fr;gap:30px}.photo-montage{grid-template-rows:auto 230px}}
 @media(max-width:700px){
-.site-header{height:84px}.brand img{width:52px;height:52px}.site-header nav{gap:16px}.site-header nav>a:is([href="/about"],[href="/workshops"]){display:none}.header-cta{padding:8px 16px;font-size:.84rem}
+.site-header{height:84px}.brand img{width:52px;height:52px}.site-header nav{gap:16px}.header-cta{padding:8px 16px;font-size:.84rem}
 .hero-copy{padding-top:14px}.hero-sky{margin-top:-6px}.hero-sky img{height:auto;aspect-ratio:2715/500;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%);mask-image:linear-gradient(180deg,transparent 0,#000 18%)}
 .spotlight-section{margin-top:20px}.spotlight{grid-template-columns:1fr;gap:22px;padding:16px;border-radius:22px}.spotlight-body{padding:0 6px 8px}.spotlight-body h2{font-size:2.1rem}
 .spotlight-body .button-row{flex-direction:column;align-items:stretch}
@@ -184,3 +184,11 @@ a.pager-number:hover{background:var(--surface);border-color:var(--accent)}
 .pager-number[aria-current=page]{background:var(--accent);border-color:var(--accent);color:var(--accent-foreground)}
 .pager-gap{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:48px;color:var(--muted-foreground)}
 @media(max-width:700px){.directory-search .button{flex:1 1 auto}.directory-pager{width:100%}.pager-numbers{order:-1;width:100%}.pager-step{flex:1 1 0;padding-inline:16px}}
+/* 2026-10-20 mobile header: below 820px the inline nav gives way to Join us + a hamburger menu holding every link. */
+.site-header{position:relative}.header-mobile{display:none;align-items:center;gap:12px}.mobile-menu-toggle{background:transparent;color:var(--foreground)}
+.site-header .mobile-menu-panel{position:absolute;top:calc(100% - 8px);right:0;left:0;z-index:60;display:flex;flex-direction:column;align-items:stretch;gap:0;padding:8px;border:1px solid var(--line);border-radius:18px;background:var(--background);box-shadow:var(--shadow)}
+.site-header .mobile-menu-panel[hidden]{display:none}
+.site-header .mobile-menu-panel a{display:flex;align-items:center;min-height:52px;padding:10px 16px;border-radius:12px;color:var(--foreground);text-decoration:none;font-size:1rem;justify-content:flex-start;text-align:left}
+.site-header .mobile-menu-panel a:hover,.site-header .mobile-menu-panel a[aria-current=page]{background:var(--surface);color:var(--accent)}
+@media(max-width:820px){.site-header .header-nav{display:none}.header-mobile{display:flex}}
+@media(max-width:400px){.header-mobile{gap:8px}}
