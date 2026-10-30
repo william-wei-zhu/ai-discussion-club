@@ -32,13 +32,13 @@ test("too few classified people shows nothing", () => {
   assert.deepEqual(s.employers, []);
 });
 
-test("small buckets fold into smaller groups, and a tiny fold is dropped", () => {
+test("every category is shown, however small; Other sorts last", () => {
   const s = aggregateDemographics([...rows(12, { ageBand: "25-34" }), ...rows(6, { ageBand: "35-44" }), ...rows(3, { ageBand: "55plus" }), ...rows(2, { ageBand: "45-54" })]);
   const age = s.dimensions.find((d) => d.key === "ageBand")!;
-  assert.deepEqual(age.bars.map((b) => [b.id, b.count]), [["25-34", 12], ["35-44", 6], ["smaller", 5]]);
+  assert.deepEqual(age.bars.map((b) => [b.id, b.count]), [["25-34", 12], ["35-44", 6], ["45-54", 2], ["55plus", 3]]);
   assert.equal(age.known, 23);
-  const s2 = aggregateDemographics([...rows(12, { ageBand: "25-34" }), ...rows(3, { ageBand: "55plus" })]);
-  assert.deepEqual(s2.dimensions[0].bars.map((b) => b.id), ["25-34"]);
+  const roles = aggregateDemographics([...rows(9, { role: "other" }), ...rows(5, { role: "product" }), ...rows(1, { role: "legal" as never })]);
+  assert.deepEqual(roles.dimensions[0].bars.map((b) => b.id), ["product", "other"]);
 });
 
 test("categorical dimensions sort largest first; ordinal ones keep their order", () => {

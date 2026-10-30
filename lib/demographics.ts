@@ -4,14 +4,14 @@
 //
 // Privacy rules, in one place:
 //  - nobody is shown individually: only counts per bucket;
-//  - a bucket with fewer than MIN_BUCKET people folds into "Smaller groups";
+//  - every category is shown with its real share, however small (owner's call,
+//    2026-10-30: the detail matters more than folding small groups together);
 //  - a dimension with fewer than MIN_PEOPLE known answers is not shown at all;
 //  - an employer is named only when at least MIN_EMPLOYER people work there;
 //  - a page with fewer than MIN_PEOPLE classified people says so and shows nothing.
 
 import type { ChoiceAnswer, ChoiceQuestion } from "@/lib/typesafe";
 
-export const MIN_BUCKET = 5;
 export const MIN_PEOPLE = 10;
 export const MIN_EMPLOYER = 5;
 // Below this Jev confidence an answer is stored as unknown, so the totals only
@@ -163,10 +163,7 @@ export type AudienceSummary = {
   employers: { name: string; count: number }[];
 };
 
-const SMALLER = "smaller";
-
-export function aggregateDemographics(rows: DemographicRow[], opts: { minBucket?: number; minPeople?: number; minEmployer?: number; maxEmployers?: number } = {}): AudienceSummary {
-  const minBucket = opts.minBucket ?? MIN_BUCKET;
+export function aggregateDemographics(rows: DemographicRow[], opts: { minPeople?: number; minEmployer?: number; maxEmployers?: number } = {}): AudienceSummary {
   const minPeople = opts.minPeople ?? MIN_PEOPLE;
   const minEmployer = opts.minEmployer ?? MIN_EMPLOYER;
   const classified = rows.filter((r) => DIMENSIONS.some((d) => r[d.key])).length;
@@ -182,20 +179,11 @@ export function aggregateDemographics(rows: DemographicRow[], opts: { minBucket?
     }
     const known = [...counts.values()].reduce((a, b) => a + b, 0);
     if (known < minPeople) continue;
-    let smaller = 0;
-    const bars: AudienceBar[] = [];
-    for (const o of d.options) {
-      const count = counts.get(o.id) ?? 0;
-      if (!count) continue;
-      // "other" is itself a catch-all, so it joins the smaller groups.
-      if (count < minBucket || o.id === "other") smaller += count;
-      else bars.push({ id: o.id, label: o.label, count, percent: 0 });
-    }
-    if (!d.ordinal) bars.sort((a, b) => b.count - a.count);
-    // The folded bucket is shown only when it is itself big enough not to point at anyone.
-    if (smaller >= minBucket) bars.push({ id: SMALLER, label: "Smaller groups", count: smaller, percent: 0 });
-    const shown = bars.reduce((a, b) => a + b.count, 0);
-    if (!bars.length || shown < minPeople) continue;
+    const bars: AudienceBar[] = d.options
+      .filter((o) => counts.get(o.id))
+      .map((o) => ({ id: o.id, label: o.label, count: counts.get(o.id) ?? 0, percent: 0 }));
+    // Largest first, with the catch-all "Other" last; ordinal scales keep their order.
+    if (!d.ordinal) bars.sort((a, b) => Number(a.id === "other") - Number(b.id === "other") || b.count - a.count);
     for (const bar of bars) bar.percent = Math.round((bar.count / known) * 100);
     dimensions.push({ key: d.key, title: d.title, ...(d.note ? { note: d.note } : {}), known, bars });
   }
