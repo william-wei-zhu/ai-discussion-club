@@ -208,4 +208,11 @@ a.pager-number:hover{background:var(--surface);border-color:var(--accent)}
 .audience-employers li:first-child{border-top:0}
 .audience-employers span:last-child{font-variant-numeric:tabular-nums}
 @media(max-width:800px){.audience-grid{grid-template-columns:1fr}.audience-card{padding:22px}}
-.hero .hero-stats{margin:-8px auto 24px;font-size:.95rem;font-variant-numeric:tabular-nums}
+/* Homepage hero: the two club numbers on the brand gradient (same as .gallery-cta), white text >= 5.1:1. */
+.hero-stats{display:inline-flex;margin:-4px auto 30px;padding:18px 10px;border-radius:26px;color:#fff;background:linear-gradient(115deg,#5b36a3 0%,#9a3a8c 55%,#bf4436 100%);box-shadow:0 22px 46px -22px rgba(154,58,140,.8),0 0 0 5px color-mix(in srgb,#9a3a8c 14%,transparent);animation:rise .9s cubic-bezier(.2,.7,.2,1) .18s both}
+.hero-stats div{display:flex;flex-direction:column-reverse;align-items:center;padding:0 34px;line-height:1}
+.hero-stats div+div{border-left:1px solid rgba(255,255,255,.35)}
+.hero-stats dd{margin:0;font-family:var(--font-display),Georgia,serif;font-size:clamp(2.6rem,4.4vw,3.6rem);font-weight:500;letter-spacing:-.03em;font-variant-numeric:lining-nums tabular-nums}
+.hero-stats dt{margin-top:8px;font-size:.88rem;letter-spacing:.02em;opacity:.95}
+@media(max-width:700px){.hero-stats{margin-bottom:24px;padding:14px 4px}.hero-stats div{padding:0 22px}.hero-stats dd{font-size:2.3rem}.hero-stats dt{font-size:.8rem}}
+@media(prefers-reduced-motion:reduce){.hero-stats{animation:none}}

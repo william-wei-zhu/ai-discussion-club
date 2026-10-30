@@ -12,13 +12,14 @@ const count = new Intl.NumberFormat('en-US');
 const petals = [[6, 0, 1], [14, 1.1, .8], [23, .4, 1.15], [34, 1.6, .9], [47, .2, 1], [58, 1.3, .75], [66, .7, 1.2], [75, 1.9, .85], [84, .5, 1.05], [93, 1.4, .9]];
 export default async function Home() {
   const [events, stats, now] = await Promise.all([getPublicEvents(), getClubStats(), getRequestTime()]);
-  // Luma calendar subscribers, refreshed by the hourly sync.
-  const counts = stats ? `${count.format(stats.calendarSubscribers)} subscribers` : '';
+  // Luma calendar subscribers (refreshed by the hourly sync) and past public events.
+  const hosted = events.filter(event => Date.parse(event.endAt || event.startAt) < now).length;
+  const counts = [stats && { value: stats.calendarSubscribers, label: 'subscribers' }, hosted > 0 && { value: hosted, label: 'events hosted' }].filter(c => !!c);
   const upcoming = events.filter(event => Date.parse(event.endAt || event.startAt) >= now).reverse();
   const [next, ...later] = upcoming;
   return <>
     <section className="hero">
-      <div className="hero-copy wrap"><h1>Make DC the City<br />for Innovators.</h1><p>A place for curious minds to talk AI,<br className="desktop-break" /> share what they’re building, and find their people.</p>{counts && <p className="hero-stats">{counts}</p>}<div className="button-row centered"><Link className="button" href="/events">Join a conversation</Link><Link className="button secondary" href="/about">Meet the club</Link></div></div>
+      <div className="hero-copy wrap"><h1>Make DC the City<br />for Innovators.</h1><p>A place for curious minds to talk AI,<br className="desktop-break" /> share what they’re building, and find their people.</p>{counts.length > 0 && <dl className="hero-stats">{counts.map(c => <div key={c.label}><dt>{c.label}</dt><dd>{count.format(c.value)}</dd></div>)}</dl>}<div className="button-row centered"><Link className="button" href="/events">Join a conversation</Link><Link className="button secondary" href="/about">Meet the club</Link></div></div>
       <div className="hero-sky" role="img" aria-label="Washington, DC skyline framed by purple cherry blossoms"><Image src={skyline} alt="" priority placeholder="blur" sizes="100vw"/><div className="petals" aria-hidden="true">{petals.map(([left, delay, scale], i) => <span key={i} style={{ '--left': `${left}%`, '--delay': `${delay}s`, '--scale': scale } as React.CSSProperties} />)}</div></div>
     </section>
     <section className="spotlight-section wrap" aria-label="Next event">{next ? <EventSpotlight event={next} now={now}/> : <EventList events={[]}/>}</section>
