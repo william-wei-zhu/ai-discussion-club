@@ -23,7 +23,7 @@ export function AudienceBreakdown({ summary }: { summary: AudienceSummary }) {
       </section>)}
       {summary.employers.length ? <section className="audience-card" aria-labelledby="aud-employers">
         <h2 id="aud-employers">Where people work</h2>
-        <p className="audience-note">Organizations with 5 or more people.</p>
+        <p className="audience-note">Organizations with 3 or more people.</p>
         <ul className="audience-employers">
           {summary.employers.map((e) => <li key={e.name}><span>{e.name}</span><span>{number.format(e.count)}</span></li>)}
         </ul>

@@ -53,14 +53,14 @@ test("dimensions with too few known answers are hidden", () => {
   assert.deepEqual(s.dimensions.map((d) => d.key), ["ageBand"]);
 });
 
-test("employers are named only with 5 or more people, however they are written", () => {
+test("employers are named only with 3 or more people, however they are written", () => {
   assert.equal(employerKey("Google LLC"), employerKey("google"));
   assert.equal(employerKey("Booz Allen Hamilton Inc."), "booz allen hamilton");
   const s = aggregateDemographics([
     ...rows(3, { role: "engineering", employer: "Google" }), ...rows(2, { role: "engineering", employer: "Google LLC" }),
-    ...rows(4, { role: "engineering", employer: "Tiny Startup" }), ...rows(2, { role: "engineering" }),
+    ...rows(3, { role: "engineering", employer: "Tiny Startup" }), ...rows(2, { role: "engineering", employer: "Two People Inc" }),
   ]);
-  assert.deepEqual(s.employers, [{ name: "Google", count: 5 }]);
+  assert.deepEqual(s.employers, [{ name: "Google", count: 5 }, { name: "Tiny Startup", count: 3 }]);
 });
 
 test("event audience counts going guests and hosts, minus opt-outs, check-ins once there are enough", () => {

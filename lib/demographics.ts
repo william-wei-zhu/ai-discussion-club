@@ -13,7 +13,7 @@
 import type { ChoiceAnswer, ChoiceQuestion } from "@/lib/typesafe";
 
 export const MIN_PEOPLE = 10;
-export const MIN_EMPLOYER = 5;
+export const MIN_EMPLOYER = 3;
 // Below this Jev confidence an answer is stored as unknown, so the totals only
 // count labels the model is sure of.
 export const MIN_CONFIDENCE = 0.6;
