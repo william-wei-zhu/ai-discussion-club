@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { syncContacts, syncEvents } from "@/lib/club";
 import { calendarSyncGate } from "@/lib/cron-sync";
 import { lumaConfigured } from "@/lib/luma";
+import { rebuildClubAudience } from "@/lib/audience";
 
 export const maxDuration = 300;
 
@@ -26,7 +27,11 @@ export async function GET(req: Request) {
   try {
     const events = await syncEvents();
     const contacts = await syncContacts();
-    return NextResponse.json({ ok: true, events, contacts, ms: Date.now() - started });
+    // The public /audience summary. A failure here must not fail the sync.
+    const audience = await rebuildClubAudience()
+      .then((a) => ({ people: a.people, classified: a.classified }))
+      .catch((e) => { console.error("[club sync audience]", e); return { error: (e as Error).message }; });
+    return NextResponse.json({ ok: true, events, contacts, audience, ms: Date.now() - started });
   } catch (error) {
     console.error("[club sync cron]", error);
     return NextResponse.json({ ok: false, error: (error as Error).message }, { status: 502 });

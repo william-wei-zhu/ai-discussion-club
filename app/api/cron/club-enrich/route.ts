@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { bearerMatches } from "@/lib/cron-sync";
 import { enrichContacts, getEvents } from "@/lib/club";
 import { lumaConfigured } from "@/lib/luma";
+import { classifyPending } from "@/lib/audience";
 
 export const maxDuration = 300;
 
@@ -39,7 +40,10 @@ export async function GET(req: Request) {
       limit: Number.isFinite(limitRaw) ? limitRaw : 60,
       deadlineMs: started + 240_000,
     });
-    return NextResponse.json({ ok: true, eventId: next?.id ?? null, ...s, ms: Date.now() - started });
+    // Then label past attendees who have no audience labels yet, in the time left.
+    const audience = await classifyPending({ limit: 300, deadlineMs: started + 280_000 })
+      .catch((e) => ({ error: (e as Error).message }));
+    return NextResponse.json({ ok: true, eventId: next?.id ?? null, ...s, audience, ms: Date.now() - started });
   } catch (e) {
     console.error("[club enrich cron]", e);
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });

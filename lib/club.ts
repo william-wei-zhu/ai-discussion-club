@@ -191,6 +191,9 @@ export async function syncContacts(): Promise<SyncSummary> {
     written++;
   }
   await writer.close();
+  // The homepage member count: Luma calendar memberships, not clubContacts (which
+  // also holds non-member guests and never shrinks).
+  await db().collection("clubMeta").doc("stats").set({ calendarSubscribers: people.length, updatedAt: now }, { merge: true });
   return { contacts: written, created, updated: written - created, tags };
 }
 
@@ -633,6 +636,7 @@ import { extractAsksOffers } from "@/lib/gemini";
 import { fetchLinkedInProfile, findPeople } from "@/lib/exa";
 import { normalizeLinkedInUrl, sameLinkedInHandle } from "@/lib/linkedin";
 import { spendBudget } from "@/lib/guard";
+import { classifyContact } from "@/lib/audience";
 import { importAvatarFromUrl } from "@/lib/storage";
 import type { ClubExaCache, ClubSignal, Intent, LinkedInConfidence } from "@/lib/types";
 
@@ -729,6 +733,7 @@ export interface EnrichSummary {
   candidates: number;
   rejected: number;
   signalsBuilt: number;
+  demographicsBuilt?: number;
   cacheHits: number;
   errors: number;
   budgetExhausted?: boolean;
@@ -1181,6 +1186,8 @@ export async function enrichContacts(opts: {
         contact.linkedinConfidence = profile.confidence;
       }
       await buildSignal(contact, eventIds, s);
+      // Audience labels follow the same profile, and skip themselves when unchanged.
+      if (await classifyContact(contact) === "built") s.demographicsBuilt = (s.demographicsBuilt ?? 0) + 1;
     } catch (e) {
       s.errors++;
       console.error("[club enrich]", id, (e as Error).message);

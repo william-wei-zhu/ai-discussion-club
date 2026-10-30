@@ -9,29 +9,33 @@ import type { DirectoryStatus } from "@/lib/directory";
 // and only changes when the admin replaces it (or revokes it). A legacy link made
 // before links were stored recoverably has no url and must be replaced once.
 // Status arrives with the event list, so a card never fetches it on its own.
-export function DirectoryControl({ eventId, initial, api, ask }: {
+// kind "audience" drives the same control for the anonymized audience link (/a/),
+// which has no connect email, so its copy differs.
+export function DirectoryControl({ eventId, initial, api, ask, kind = "directory" }: {
   eventId: string;
   initial?: DirectoryStatus;
   api: Fetcher;
   ask: (c: Confirm) => void;
+  kind?: "directory" | "audience";
 }) {
+  const noun = kind === "audience" ? "audience page" : "directory";
   const [status, setStatus] = useState<DirectoryStatus>(initial ?? { enabled: false });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
-  const path = `/api/events/${encodeURIComponent(eventId)}/directory`;
+  const path = `/api/events/${encodeURIComponent(eventId)}/${kind}`;
 
   async function create(action: "generate" | "rotate") {
     setBusy(true); setMessage(null);
     try {
       setStatus(await api(path, { method: "POST", body: JSON.stringify({ action }) }) as DirectoryStatus);
-      setMessage({ text: action === "rotate" ? "New link created. The old link no longer works." : "Directory link created." });
+      setMessage({ text: action === "rotate" ? "New link created. The old link no longer works." : kind === "audience" ? "Audience link created." : "Directory link created." });
     } catch (e) { setMessage({ text: (e as Error).message, error: true }); throw e; }
     finally { setBusy(false); }
   }
 
   async function revoke() {
     setBusy(true); setMessage(null);
-    try { setStatus(await api(path, { method: "PATCH" }) as DirectoryStatus); setMessage({ text: "The directory is now off." }); }
+    try { setStatus(await api(path, { method: "PATCH" }) as DirectoryStatus); setMessage({ text: `The ${noun} is now off.` }); }
     catch (e) { setMessage({ text: (e as Error).message, error: true }); throw e; }
     finally { setBusy(false); }
   }
@@ -40,7 +44,7 @@ export function DirectoryControl({ eventId, initial, api, ask }: {
     <div className="flex flex-wrap items-center gap-2">
       {status.enabled ? <>
         <Button variant="outline" size="sm" disabled={busy} onClick={() => ask({
-          title: status.url ? "Replace the directory link?" : "Replace the legacy link?",
+          title: status.url ? `Replace the ${noun} link?` : "Replace the legacy link?",
           description: status.url
             ? "The current link stops working immediately, including in emails already sent. Only do this if the link leaked."
             : "This link was made before links were stored, so it cannot be shown. Replacing it creates a permanent link; the old one stops working.",
@@ -49,19 +53,21 @@ export function DirectoryControl({ eventId, initial, api, ask }: {
           run: () => create("rotate"),
         })}>{status.url ? "Replace link" : "Replace to make permanent"}</Button>
         <Button variant="outline" size="sm" disabled={busy} onClick={() => ask({
-          title: "Turn off this event's directory?",
-          description: "The link stops working for everyone, and the connect email for this event will not send while the directory is off.",
-          confirmLabel: "Turn off directory",
+          title: `Turn off this event's ${noun}?`,
+          description: kind === "audience"
+            ? "The link stops working for everyone you shared it with."
+            : "The link stops working for everyone, and the connect email for this event will not send while the directory is off.",
+          confirmLabel: `Turn off ${noun}`,
           danger: true,
           run: revoke,
-        })}>Turn off directory</Button>
+        })}>Turn off {noun}</Button>
       </> : <Button variant="outline" size="sm" disabled={busy} onClick={() => { void create("generate").catch(() => undefined); }}>
-        {status.revokedAt ? "Turn directory back on (new link)" : "Create directory link"}
+        {status.revokedAt ? `Turn ${noun} back on (new link)` : kind === "audience" ? "Create audience link" : "Create directory link"}
       </Button>}
     </div>
     {status.url ? <div className="flex flex-wrap gap-2">
-      <label className="sr-only" htmlFor={`directory-${eventId}`}>Directory link</label>
-      <input id={`directory-${eventId}`} className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm" readOnly value={status.url} onFocus={(e) => e.currentTarget.select()} />
+      <label className="sr-only" htmlFor={`${kind}-${eventId}`}>{kind === "audience" ? "Audience link" : "Directory link"}</label>
+      <input id={`${kind}-${eventId}`} className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm" readOnly value={status.url} onFocus={(e) => e.currentTarget.select()} />
       <Button size="sm" onClick={() => navigator.clipboard.writeText(status.url ?? "").then(() => setMessage({ text: "Link copied." }))}>Copy</Button>
     </div> : null}
     {message ? <p role={message.error ? "alert" : "status"} className={`text-sm ${message.error ? "text-destructive" : ""}`}>{message.text}</p> : null}

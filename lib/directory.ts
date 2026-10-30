@@ -30,14 +30,22 @@ export function hashToken(token: string): string {
 // The token is looked up by hash (tokenHash), but also stored encrypted
 // (tokenEnc, AES-256-GCM) so admin can show the link any time and the connect job
 // can reuse it. The key is derived from the existing server secret, so no new env.
+// The same capability backs two kinds of private event link: the directory (/g/)
+// and the anonymized audience summary (/a/). Each kind has its own collection,
+// path and derived key, so one kind's token never opens the other.
 
-function linkKey(secretValue = serverSecret()): Buffer | null {
+export type EventLinkKind = { collection: string; path: string; keyInfo: string };
+export const DIRECTORY_LINK: EventLinkKind = { collection: DIRECTORY_ACCESS, path: "g", keyInfo: "directory-link-v1" };
+export const AUDIENCE_ACCESS = "audienceAccess";
+export const AUDIENCE_LINK: EventLinkKind = { collection: AUDIENCE_ACCESS, path: "a", keyInfo: "audience-link-v1" };
+
+function linkKey(secretValue = serverSecret(), keyInfo = DIRECTORY_LINK.keyInfo): Buffer | null {
   if (!secretValue) return null;
-  return Buffer.from(hkdfSync("sha256", secretValue, "aidc-directory", "directory-link-v1", 32));
+  return Buffer.from(hkdfSync("sha256", secretValue, "aidc-directory", keyInfo, 32));
 }
 
-export function encryptToken(token: string, secretValue?: string): string | null {
-  const key = linkKey(secretValue);
+export function encryptToken(token: string, secretValue?: string, kind: EventLinkKind = DIRECTORY_LINK): string | null {
+  const key = linkKey(secretValue, kind.keyInfo);
   if (!key) return null;
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
@@ -45,8 +53,8 @@ export function encryptToken(token: string, secretValue?: string): string | null
   return [iv, cipher.getAuthTag(), body].map((b) => b.toString("base64url")).join(".");
 }
 
-export function decryptToken(enc: unknown, secretValue?: string): string | null {
-  const key = linkKey(secretValue);
+export function decryptToken(enc: unknown, secretValue?: string, kind: EventLinkKind = DIRECTORY_LINK): string | null {
+  const key = linkKey(secretValue, kind.keyInfo);
   if (!key || typeof enc !== "string") return null;
   const [iv, tag, body] = enc.split(".").map((part) => Buffer.from(part ?? "", "base64url"));
   if (!iv?.length || !tag?.length || !body?.length) return null;
@@ -60,34 +68,43 @@ export function decryptToken(enc: unknown, secretValue?: string): string | null 
   }
 }
 
-export function directoryUrl(token: string): string {
-  return `${siteUrl.replace(/\/$/, "")}/g/${token}`;
+export function directoryUrl(token: string, kind: EventLinkKind = DIRECTORY_LINK): string {
+  return `${siteUrl.replace(/\/$/, "")}/${kind.path}/${token}`;
 }
 
 // The current link for an event, or null when there is none, it is revoked, or it
 // predates tokenEnc (only its hash exists, so it cannot be shown again).
-export async function directoryUrlFor(eventId: string): Promise<string | null> {
-  const data = (await db().collection(DIRECTORY_ACCESS).doc(eventId).get()).data();
+export async function directoryUrlFor(eventId: string, kind: EventLinkKind = DIRECTORY_LINK): Promise<string | null> {
+  const data = (await db().collection(kind.collection).doc(eventId).get()).data();
   if (data?.enabled !== true) return null;
-  const token = decryptToken(data.tokenEnc);
-  return token ? directoryUrl(token) : null;
+  const token = decryptToken(data.tokenEnc, undefined, kind);
+  return token ? directoryUrl(token, kind) : null;
+}
+
+// The event an enabled link opens, or null. Used by the proxy (real 404 before
+// streaming) and by the pages themselves.
+export async function eventIdForToken(token: string, kind: EventLinkKind = DIRECTORY_LINK): Promise<string | null> {
+  if (!isDirectoryToken(token)) return null;
+  const access = await db().collection(kind.collection).where("tokenHash", "==", hashToken(token)).limit(1).get();
+  const record = access.docs[0];
+  return record && record.data().enabled === true ? record.id : null;
 }
 
 // Create (or replace) the event's link. Replacing invalidates the old URL. Runs in a
 // transaction so two concurrent callers (an admin click and a cron tick) cannot
 // rotate twice and invalidate a link one of them just emailed. `onlyIfUnusable`
 // makes it a no-op when a working link already exists (the connect job's case).
-export async function issueDirectoryLink(eventId: string, by: string, opts: { onlyIfUnusable?: boolean } = {}): Promise<{ url: string; version: number }> {
-  const ref = db().collection(DIRECTORY_ACCESS).doc(eventId);
+export async function issueDirectoryLink(eventId: string, by: string, opts: { onlyIfUnusable?: boolean } = {}, kind: EventLinkKind = DIRECTORY_LINK): Promise<{ url: string; version: number }> {
+  const ref = db().collection(kind.collection).doc(eventId);
   return db().runTransaction(async (tx) => {
     const current = await tx.get(ref);
     const data = current.data();
     if (opts.onlyIfUnusable && data?.enabled === true) {
-      const existing = decryptToken(data.tokenEnc);
-      if (existing) return { url: directoryUrl(existing), version: Number(data.version || 0) };
+      const existing = decryptToken(data.tokenEnc, undefined, kind);
+      if (existing) return { url: directoryUrl(existing, kind), version: Number(data.version || 0) };
     }
     const token = randomUrlToken();
-    const tokenEnc = encryptToken(token);
+    const tokenEnc = encryptToken(token, undefined, kind);
     if (!tokenEnc) throw new Error("No server secret is configured for directory links.");
     const now = Date.now();
     const version = Number(data?.version || 0) + 1;
@@ -96,7 +113,7 @@ export async function issueDirectoryLink(eventId: string, by: string, opts: { on
       revokedAt: FieldValue.delete(), revokedBy: FieldValue.delete(),
       ...(current.exists ? { rotatedAt: now, rotatedBy: by } : { createdAt: now, createdBy: by }),
     }, { merge: true });
-    return { url: directoryUrl(token), version };
+    return { url: directoryUrl(token, kind), version };
   });
 }
 
@@ -105,13 +122,13 @@ export type DirectoryStatus = { enabled: boolean; url?: string; version?: number
 // What the admin console shows for an event's link. The link is fixed: shown every
 // time. A legacy hash-only link has no url and must be replaced once. revokedAt is
 // only reported while the link is actually off.
-export function directoryStatus(data: Record<string, unknown> | undefined): DirectoryStatus {
+export function directoryStatus(data: Record<string, unknown> | undefined, kind: EventLinkKind = DIRECTORY_LINK): DirectoryStatus {
   const enabled = data?.enabled === true;
-  const token = enabled ? decryptToken(data?.tokenEnc) : null;
+  const token = enabled ? decryptToken(data?.tokenEnc, undefined, kind) : null;
   const num = (v: unknown) => (typeof v === "number" ? v : undefined);
   return stripEmpty({
     enabled,
-    url: token ? directoryUrl(token) : undefined,
+    url: token ? directoryUrl(token, kind) : undefined,
     version: num(data?.version),
     createdAt: num(data?.createdAt),
     rotatedAt: num(data?.rotatedAt),
