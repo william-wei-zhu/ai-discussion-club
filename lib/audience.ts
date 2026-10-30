@@ -1,9 +1,9 @@
 import { createHash } from "crypto";
 import { db } from "@/lib/firebase-admin";
-import { aggregateDemographics, audienceGuestIds, demographicQuestions, DIMENSIONS_VERSION, labelsFromAnswers, type AudienceSummary, type DemographicRow } from "@/lib/demographics";
+import { aggregateDemographics, audienceGuestIds, dedupePeople, demographicQuestions, DIMENSIONS_VERSION, labelsFromAnswers, type AudienceSummary, type DemographicRow } from "@/lib/demographics";
 import { extractEmployer } from "@/lib/gemini";
 import { spendBudget } from "@/lib/guard";
-import { cacheMatchesProfile, isTrustedLinkedIn } from "@/lib/profile-rules";
+import { cacheMatchesProfile, isTrustedLinkedIn, trustedLinkedInUrl } from "@/lib/profile-rules";
 import { askChoices, JEV_MODEL, typesafeConfigured } from "@/lib/typesafe";
 import type { ClubContact, ClubExaCache } from "@/lib/types";
 
@@ -118,16 +118,25 @@ export async function classifyPending(opts: { limit?: number; deadlineMs?: numbe
   return out;
 }
 
+// One row per person: labels plus the trusted LinkedIn used to merge two Luma
+// accounts of the same person (dedupePeople).
 async function rowsFor(ids: string[]): Promise<DemographicRow[]> {
-  const rows: DemographicRow[] = [];
-  for (let i = 0; i < ids.length; i += 300) {
-    const chunk = ids.slice(i, i + 300);
+  const rows: (DemographicRow & { linkedinUrl?: string })[] = [];
+  const unique = [...new Set(ids)];
+  for (let i = 0; i < unique.length; i += 300) {
+    const chunk = unique.slice(i, i + 300);
     if (!chunk.length) continue;
-    const snaps = await db().getAll(...chunk.map(demographicsRef));
+    const [labels, contacts] = await Promise.all([
+      db().getAll(...chunk.map(demographicsRef)),
+      db().getAll(...chunk.map((id) => db().collection(CONTACTS).doc(id)), { fieldMask: ["linkedinUrl", "linkedinConfidence"] }),
+    ]);
     // A contact with no labels yet still counts toward the total, as unknown.
-    for (const s of snaps) rows.push(s.exists ? (s.data() as DemographicRow) : {});
+    labels.forEach((s, j) => rows.push({
+      ...(s.exists ? (s.data() as DemographicRow) : {}),
+      linkedinUrl: trustedLinkedInUrl((contacts[j].data() ?? {}) as Parameters<typeof trustedLinkedInUrl>[0]),
+    }));
   }
-  return rows;
+  return dedupePeople(rows);
 }
 
 export type EventAudience = AudienceSummary & { event: { name: string; startAt?: number }; checkedIn: boolean };

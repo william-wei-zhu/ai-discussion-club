@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregateDemographics, audienceGuestIds, demographicQuestions, DIMENSIONS, employerKey, labelsFromAnswers, type DemographicRow } from "../lib/demographics";
+import { aggregateDemographics, audienceGuestIds, dedupePeople, personKey, demographicQuestions, DIMENSIONS, employerKey, labelsFromAnswers, type DemographicRow } from "../lib/demographics";
 import { AUDIENCE_LINK, decryptToken, DIRECTORY_LINK, directoryUrl, encryptToken, randomUrlToken } from "../lib/directory";
 
 const rows = (n: number, row: DemographicRow): DemographicRow[] => Array.from({ length: n }, () => ({ ...row }));
@@ -83,4 +83,20 @@ test("audience links have their own path and key", () => {
   const enc = encryptToken(token, "secret", AUDIENCE_LINK);
   assert.equal(decryptToken(enc, "secret", AUDIENCE_LINK), token);
   assert.equal(decryptToken(enc, "secret", DIRECTORY_LINK), null);
+});
+
+test("one person with two Luma accounts counts once; placeholders and unknowns never merge", () => {
+  assert.equal(personKey("https://www.linkedin.com/in/Ada-L/"), "ada-l");
+  assert.equal(personKey("https://www.linkedin.com/in/na"), null);
+  assert.equal(personKey(undefined), null);
+  const rows = dedupePeople([
+    { linkedinUrl: "https://www.linkedin.com/in/ada-l", role: "engineering" },
+    { linkedinUrl: "https://linkedin.com/in/ADA-L", role: "engineering", ageBand: "25-34" },
+    { linkedinUrl: "https://www.linkedin.com/in/test", role: "product" },
+    { linkedinUrl: "https://www.linkedin.com/in/test", role: "design" },
+    {}, {},
+  ]);
+  assert.equal(rows.length, 5);
+  assert.deepEqual(rows[0], { role: "engineering", ageBand: "25-34" });
+  assert.equal(rows.some((r) => "linkedinUrl" in r), false);
 });

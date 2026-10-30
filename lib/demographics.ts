@@ -220,6 +220,35 @@ export function aggregateDemographics(rows: DemographicRow[], opts: { minBucket?
   return { people: rows.length, classified, tooSmall: false, dimensions, employers: topEmployers };
 }
 
+// One person, one row. Contacts are already one per Luma account (attending many
+// events never repeats anyone), but some people have two Luma accounts, e.g. a work
+// and a personal email. Those share a trusted LinkedIn profile, so rows with the same
+// profile merge, keeping the most complete labels. Placeholder handles typed into
+// registration forms ("/in/na", "/in/test") are shared by different people and never
+// merge. Names alone are not unique enough to merge on.
+const PLACEHOLDER_HANDLES = new Set(["na", "n-a", "none", "test", "no", "null", "linkedin", "me"]);
+export function personKey(linkedinUrl: string | undefined): string | null {
+  const handle = linkedinUrl?.match(/linkedin\.com\/in\/([^/?#]+)/i)?.[1]?.toLowerCase();
+  if (!handle || handle.length < 3 || PLACEHOLDER_HANDLES.has(handle)) return null;
+  return handle;
+}
+export function dedupePeople<T extends DemographicRow>(rows: (T & { linkedinUrl?: string })[]): T[] {
+  const labelled = (r: DemographicRow) => DIMENSIONS.filter((d) => r[d.key]).length + (r.employer ? 1 : 0);
+  const out: (T & { linkedinUrl?: string })[] = [];
+  const seen = new Map<string, number>();
+  for (const row of rows) {
+    const key = personKey(row.linkedinUrl);
+    const at = key ? seen.get(key) : undefined;
+    if (at === undefined) { if (key) seen.set(key, out.length); out.push(row); }
+    else if (labelled(row) > labelled(out[at])) out[at] = row;
+  }
+  return out.map((row) => {
+    const copy: T & { linkedinUrl?: string } = { ...row };
+    delete copy.linkedinUrl;
+    return copy;
+  });
+}
+
 // Which of an event's guests count toward its audience. Going guests and hosts,
 // never someone who hid themselves from the event's directory. Once an event has
 // enough check-ins to report on, only the people who actually came.
