@@ -17,7 +17,7 @@ export default async function AudiencePage() {
   return <div className="wrap page-content">
     <div className="page-heading">
       <h1>Who comes to the club.</h1>
-      <p>An anonymized summary of the {summary ? number.format(summary.people) : ""} people who have joined us{hosted ? ` across ${number.format(hosted)} events` : ""}, built from public professional profiles and updated every hour. Sponsoring or speaking at an event? Organizers can share a summary for a specific event.</p>
+      <p>An anonymized summary of the {summary ? number.format(summary.people) : ""} people who have joined us{hosted ? ` across ${number.format(hosted)} events` : ""}, built from public professional profiles and updated every hour. Each event page also has its own summary.</p>
     </div>
     {summary ? <AudienceBreakdown summary={summary} /> : <div className="empty-state"><h2>Coming soon.</h2><p>The audience summary is being put together.</p><Link className="button" href="/events">See upcoming events</Link></div>}
   </div>;

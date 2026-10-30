@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ArrowUpRight, CalendarDays, CalendarPlus, Clock, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CalendarDays, CalendarPlus, Clock, MapPin, Users } from 'lucide-react';
 import { eventDate, getPublicEvents, getRequestTime } from '@/lib/public-events';
 import { googleCalendarUrl, mapsUrl, plainParagraphs, relativeWhen } from '@/lib/event-links';
 export const dynamic = 'force-dynamic';
@@ -40,6 +40,7 @@ export default async function EventDetail({ params }: { params: Promise<{ id: st
         <div className="button-stack">
           <a className="button" href={event.url} target="_blank" rel="noopener noreferrer">{past ? 'View on Luma' : 'Register on Luma'}<ArrowUpRight size={18} aria-hidden="true"/></a>
           {!past && <a className="button secondary" href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer"><CalendarPlus size={18} aria-hidden="true"/>Add to calendar</a>}
+          <Link className="button secondary" href={`/events/${encodeURIComponent(event.id)}/audience`}><Users size={18} aria-hidden="true"/>{past ? 'Who came' : 'Who’s coming'}</Link>
         </div>
         <p className="small">Registration and the latest event details are managed on Luma.</p>
       </aside>

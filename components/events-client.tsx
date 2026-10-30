@@ -138,7 +138,6 @@ interface EventRow {
   /** Attendees who have never had a profile lookup. Upcoming events only. */
   pendingLookup?: number;
   directory?: DirectoryStatus;
-  audience?: DirectoryStatus;
 }
 
 // The event's local start, in the event's own timezone (a DC event reads as 3:00 PM
@@ -546,9 +545,6 @@ function EventCard({
 
         <ControlRow label="Directory">
           <DirectoryControl eventId={e.id} initial={e.directory} api={authFetch} ask={ask} />
-        </ControlRow>
-        <ControlRow label="Audience">
-          <DirectoryControl eventId={e.id} initial={e.audience} api={authFetch} ask={ask} kind="audience" />
         </ControlRow>
       </div>
       {note && <p className="note mt-3 text-sm" role="status">{note}</p>}

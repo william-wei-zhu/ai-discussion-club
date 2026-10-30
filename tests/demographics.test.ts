@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { aggregateDemographics, audienceGuestIds, dedupePeople, personKey, demographicQuestions, DIMENSIONS, employerKey, labelsFromAnswers, type DemographicRow } from "../lib/demographics";
-import { AUDIENCE_LINK, decryptToken, DIRECTORY_LINK, directoryUrl, encryptToken, randomUrlToken } from "../lib/directory";
 
 const rows = (n: number, row: DemographicRow): DemographicRow[] => Array.from({ length: n }, () => ({ ...row }));
 
@@ -74,15 +73,6 @@ test("event audience counts going guests and hosts, minus opt-outs, check-ins on
   assert.equal(audienceGuestIds(many, new Set()).length, 10);
   const few = Array.from({ length: 12 }, (_, i) => ({ id: `g${i}`, approvalStatus: "approved", checkedInAt: i < 3 ? 1 : null }));
   assert.equal(audienceGuestIds(few, new Set()).length, 12);
-});
-
-test("audience links have their own path and key", () => {
-  const token = randomUrlToken();
-  assert.match(directoryUrl(token, AUDIENCE_LINK), new RegExp(`/a/${token}$`));
-  assert.match(directoryUrl(token), new RegExp(`/g/${token}$`));
-  const enc = encryptToken(token, "secret", AUDIENCE_LINK);
-  assert.equal(decryptToken(enc, "secret", AUDIENCE_LINK), token);
-  assert.equal(decryptToken(enc, "secret", DIRECTORY_LINK), null);
 });
 
 test("one person with two Luma accounts counts once; placeholders and unknowns never merge", () => {

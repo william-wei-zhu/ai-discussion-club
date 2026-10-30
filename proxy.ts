@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/firebase-admin";
-import { AUDIENCE_LINK, DIRECTORY_LINK, eventIdForToken, type EventLinkKind } from "@/lib/directory";
+import { DIRECTORY_ACCESS, hashToken, isDirectoryToken } from "@/lib/directory";
 
 const privateHeaders = {
   "Cache-Control": "private, no-store, max-age=0",
@@ -21,23 +21,17 @@ function directoryNotFound() {
   });
 }
 
-// Private event links: /g/ is the directory, /a/ the anonymized audience summary.
-function privateLinkKind(pathname: string): EventLinkKind | null {
-  if (pathname.startsWith("/g/")) return DIRECTORY_LINK;
-  if (pathname.startsWith("/a/")) return AUDIENCE_LINK;
-  return null;
-}
-
 // Admin event responses can contain attendee names, email addresses, and match
 // details. Keep browsers and intermediary caches from retaining any of them.
 export async function proxy(req: NextRequest) {
-  const kind = privateLinkKind(req.nextUrl.pathname);
-  if (kind) {
-    const token = req.nextUrl.pathname.slice(kind.path.length + 2);
+  if (req.nextUrl.pathname.startsWith("/g/")) {
+    const token = req.nextUrl.pathname.slice(3);
+    if (!isDirectoryToken(token)) return directoryNotFound();
     try {
-      const eventId = await eventIdForToken(token, kind);
-      if (!eventId) return directoryNotFound();
-      const event = await db().collection("clubEvents").doc(eventId).get();
+      const access = await db().collection(DIRECTORY_ACCESS).where("tokenHash", "==", hashToken(token)).limit(1).get();
+      const record = access.docs[0];
+      if (!record || record.data().enabled !== true) return directoryNotFound();
+      const event = await db().collection("clubEvents").doc(record.id).get();
       if (!event.exists) return directoryNotFound();
     } catch {
       return directoryNotFound();
@@ -46,7 +40,7 @@ export async function proxy(req: NextRequest) {
   const response = NextResponse.next();
   response.headers.set("Cache-Control", privateHeaders["Cache-Control"]);
   response.headers.set("Pragma", privateHeaders.Pragma);
-  if (kind) {
+  if (req.nextUrl.pathname.startsWith("/g/")) {
     response.headers.set("Referrer-Policy", "no-referrer");
     response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   }
@@ -54,5 +48,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/events/:path*", "/g/:token", "/a/:token"],
+  matcher: ["/api/events/:path*", "/g/:token"],
 };

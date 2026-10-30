@@ -4,7 +4,7 @@ import { rateLimit, clientIp } from "@/lib/guard";
 import { countPendingLookup, getEvents } from "@/lib/club";
 import { lumaConfigured } from "@/lib/luma";
 import { db } from "@/lib/firebase-admin";
-import { AUDIENCE_LINK, DIRECTORY_ACCESS, directoryStatus } from "@/lib/directory";
+import { DIRECTORY_ACCESS, directoryStatus } from "@/lib/directory";
 
 // GET /api/events/list — the clubEvents mirror, newest first, with each event's
 // counts and job state. Firestore only; Luma is never called from a read path.
@@ -31,8 +31,6 @@ export async function GET(req: Request) {
   // fetch their own (that fan-out used to trip the rate limit and log the admin out).
   const dirSnaps = events.length ? await db().getAll(...events.map((e) => db().collection(DIRECTORY_ACCESS).doc(e.id))) : [];
   const directory = new Map(dirSnaps.map((snap) => [snap.id, directoryStatus(snap.data())]));
-  const audienceSnaps = events.length ? await db().getAll(...events.map((e) => db().collection(AUDIENCE_LINK.collection).doc(e.id))) : [];
-  const audience = new Map(audienceSnaps.map((snap) => [snap.id, directoryStatus(snap.data(), AUDIENCE_LINK)]));
 
   return NextResponse.json({
     setup: {
@@ -51,7 +49,6 @@ export async function GET(req: Request) {
       hoursUntil: (e.startAt - now) / 3_600_000,
       ...(pending.has(e.id) ? { pendingLookup: pending.get(e.id) } : {}),
       directory: directory.get(e.id) ?? { enabled: false },
-      audience: audience.get(e.id) ?? { enabled: false },
     })),
   }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
 }
