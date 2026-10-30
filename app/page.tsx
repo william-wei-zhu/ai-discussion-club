@@ -12,9 +12,8 @@ const count = new Intl.NumberFormat('en-US');
 const petals = [[6, 0, 1], [14, 1.1, .8], [23, .4, 1.15], [34, 1.6, .9], [47, .2, 1], [58, 1.3, .75], [66, .7, 1.2], [75, 1.9, .85], [84, .5, 1.05], [93, 1.4, .9]];
 export default async function Home() {
   const [events, stats, now] = await Promise.all([getPublicEvents(), getClubStats(), getRequestTime()]);
-  // Luma calendar subscribers (refreshed by the hourly sync) and past events.
-  const hosted = events.filter(event => Date.parse(event.endAt || event.startAt) < now).length;
-  const counts = [stats && `${count.format(stats.calendarSubscribers)} subscribers`, hosted > 0 && `${count.format(hosted)} events hosted`].filter(Boolean).join(' · ');
+  // Luma calendar subscribers, refreshed by the hourly sync.
+  const counts = stats ? `${count.format(stats.calendarSubscribers)} subscribers` : '';
   const upcoming = events.filter(event => Date.parse(event.endAt || event.startAt) >= now).reverse();
   const [next, ...later] = upcoming;
   return <>
