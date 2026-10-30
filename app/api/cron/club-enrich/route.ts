@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { bearerMatches } from "@/lib/cron-sync";
-import { enrichContacts, getEvents } from "@/lib/club";
+import { enrichContacts, getEventGuests, getEvents } from "@/lib/club";
 import { lumaConfigured } from "@/lib/luma";
 import { classifyPending } from "@/lib/audience";
 
@@ -26,24 +26,33 @@ export async function GET(req: Request) {
   if (!lumaConfigured()) return NextResponse.json({ ok: true, skipped: "luma-not-configured" });
 
   const url = new URL(req.url);
-  const limitRaw = Number(url.searchParams.get("limit") ?? 60);
+  const limitRaw = Number(url.searchParams.get("limit") ?? 120);
   const started = Date.now();
 
-  // Prioritise the next event's confirmed guests: they are whose data is about to
-  // matter. With no upcoming event, enrichContacts falls back to the most-engaged
-  // contacts, which is the useful default for a quiet week.
-  const next = (await getEvents()).filter((e) => e.startAt > started).sort((a, b) => a.startAt - b.startAt)[0];
+  // Prioritise upcoming events' confirmed guests, soonest event first: they are
+  // whose data is about to matter (matching, and each event's public audience page).
+  // With no upcoming guests, enrichContacts falls back to the most-engaged contacts,
+  // which is the useful default for a quiet week.
+  const upcoming = (await getEvents()).filter((e) => e.startAt > started).sort((a, b) => a.startAt - b.startAt);
+  const ids = new Set<string>();
+  for (const e of upcoming) {
+    for (const g of await getEventGuests(e.id)) {
+      // Hosts included: organizers are attending, and Luma reports them as "invited".
+      if (g.approvalStatus === "approved" || g.isHost) ids.add(g.id);
+    }
+  }
+  const guestIds = [...ids];
 
   try {
     const s = await enrichContacts({
-      eventId: next?.id,
-      limit: Number.isFinite(limitRaw) ? limitRaw : 60,
+      contactIds: guestIds.length ? guestIds : undefined,
+      limit: Number.isFinite(limitRaw) ? limitRaw : 120,
       deadlineMs: started + 240_000,
     });
     // Then label past attendees who have no audience labels yet, in the time left.
     const audience = await classifyPending({ limit: 300, deadlineMs: started + 280_000 })
       .catch((e) => ({ error: (e as Error).message }));
-    return NextResponse.json({ ok: true, eventId: next?.id ?? null, ...s, audience, ms: Date.now() - started });
+    return NextResponse.json({ ok: true, upcomingEvents: upcoming.length, upcomingGuests: guestIds.length, ...s, audience, ms: Date.now() - started });
   } catch (e) {
     console.error("[club enrich cron]", e);
     return NextResponse.json({ ok: false, error: (e as Error).message }, { status: 500 });
